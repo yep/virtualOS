@@ -1,0 +1,645 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0005A77A27E2809E0013BE83 /* VirtualMachineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0005A77927E2809E0013BE83 /* VirtualMachineView.swift */; };
+		0044A65527F601E60007988A /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0044A65427F601E60007988A /* MainViewModel.swift */; };
+		0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0044A65927F76BD30007988A /* URL+Paths.swift */; };
+		006504E727F9D59300723BCA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006504E627F9D59300723BCA /* SettingsView.swift */; };
+		007987AF27E2487200960D74 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 007987AE27E2487200960D74 /* LICENSE */; };
+		007987B127E24A8400960D74 /* VirtualMac.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007987B027E24A8400960D74 /* VirtualMac.swift */; };
+		0090AF6127E25F6F0077D35F /* UInt64+Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */; };
+		00989C6427E2340C0048776B /* virtualOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C6327E2340C0048776B /* virtualOSApp.swift */; };
+		00989C6827E2340D0048776B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00989C6727E2340D0048776B /* Assets.xcassets */; };
+		00989C6B27E2340D0048776B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00989C6A27E2340D0048776B /* Preview Assets.xcassets */; };
+		00989C7627E2340D0048776B /* virtualOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C7527E2340D0048776B /* virtualOSTests.swift */; };
+		00989C8027E2340D0048776B /* virtualOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C7F27E2340D0048776B /* virtualOSUITests.swift */; };
+		00989C8227E2340D0048776B /* virtualOSUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C8127E2340D0048776B /* virtualOSUITestsLaunchTests.swift */; };
+		00989C9627E236A10048776B /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9427E236A10048776B /* MainView.swift */; };
+		00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9927E238930048776B /* VirtualMacConfiguration.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		00989C7227E2340D0048776B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00989C5827E2340C0048776B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00989C5F27E2340C0048776B;
+			remoteInfo = virtualOS;
+		};
+		00989C7C27E2340D0048776B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00989C5827E2340C0048776B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00989C5F27E2340C0048776B;
+			remoteInfo = virtualOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0005A77927E2809E0013BE83 /* VirtualMachineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMachineView.swift; sourceTree = "<group>"; };
+		0044A65427F601E60007988A /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
+		0044A65927F76BD30007988A /* URL+Paths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Paths.swift"; sourceTree = "<group>"; };
+		006504E627F9D59300723BCA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		007987AE27E2487200960D74 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		007987B027E24A8400960D74 /* VirtualMac.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMac.swift; sourceTree = "<group>"; };
+		0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UInt64+Byte.swift"; sourceTree = "<group>"; };
+		00989C6027E2340C0048776B /* virtualOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = virtualOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		00989C6327E2340C0048776B /* virtualOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = virtualOSApp.swift; sourceTree = "<group>"; };
+		00989C6727E2340D0048776B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		00989C6A27E2340D0048776B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		00989C6C27E2340D0048776B /* virtualOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = virtualOS.entitlements; sourceTree = "<group>"; };
+		00989C7127E2340D0048776B /* virtualOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = virtualOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		00989C7527E2340D0048776B /* virtualOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = virtualOSTests.swift; sourceTree = "<group>"; };
+		00989C7B27E2340D0048776B /* virtualOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = virtualOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		00989C7F27E2340D0048776B /* virtualOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = virtualOSUITests.swift; sourceTree = "<group>"; };
+		00989C8127E2340D0048776B /* virtualOSUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = virtualOSUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		00989C9427E236A10048776B /* MainView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		00989C9927E238930048776B /* VirtualMacConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMacConfiguration.swift; sourceTree = "<group>"; };
+		00BA26AC2826DAF200E80B76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00989C5D27E2340C0048776B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C6E27E2340D0048776B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C7827E2340D0048776B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0090AF5F27E25F6F0077D35F /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */,
+				0044A65927F76BD30007988A /* URL+Paths.swift */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
+		00989C5727E2340C0048776B = {
+			isa = PBXGroup;
+			children = (
+				007987AE27E2487200960D74 /* LICENSE */,
+				00989C6227E2340C0048776B /* virtualOS */,
+				00989C7427E2340D0048776B /* virtualOSTests */,
+				00989C7E27E2340D0048776B /* virtualOSUITests */,
+				00989C6127E2340C0048776B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		00989C6127E2340C0048776B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00989C6027E2340C0048776B /* virtualOS.app */,
+				00989C7127E2340D0048776B /* virtualOSTests.xctest */,
+				00989C7B27E2340D0048776B /* virtualOSUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		00989C6227E2340C0048776B /* virtualOS */ = {
+			isa = PBXGroup;
+			children = (
+				00BA26AC2826DAF200E80B76 /* Info.plist */,
+				00989C6327E2340C0048776B /* virtualOSApp.swift */,
+				00989C9127E236A10048776B /* Model */,
+				00989C9327E236A10048776B /* View */,
+				0090AF5F27E25F6F0077D35F /* Extension */,
+				00989C6727E2340D0048776B /* Assets.xcassets */,
+				00989C6C27E2340D0048776B /* virtualOS.entitlements */,
+				00989C6927E2340D0048776B /* Preview Content */,
+			);
+			path = virtualOS;
+			sourceTree = "<group>";
+		};
+		00989C6927E2340D0048776B /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				00989C6A27E2340D0048776B /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		00989C7427E2340D0048776B /* virtualOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				00989C7527E2340D0048776B /* virtualOSTests.swift */,
+			);
+			path = virtualOSTests;
+			sourceTree = "<group>";
+		};
+		00989C7E27E2340D0048776B /* virtualOSUITests */ = {
+			isa = PBXGroup;
+			children = (
+				00989C7F27E2340D0048776B /* virtualOSUITests.swift */,
+				00989C8127E2340D0048776B /* virtualOSUITestsLaunchTests.swift */,
+			);
+			path = virtualOSUITests;
+			sourceTree = "<group>";
+		};
+		00989C9127E236A10048776B /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				0044A65427F601E60007988A /* MainViewModel.swift */,
+				007987B027E24A8400960D74 /* VirtualMac.swift */,
+				00989C9927E238930048776B /* VirtualMacConfiguration.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		00989C9327E236A10048776B /* View */ = {
+			isa = PBXGroup;
+			children = (
+				00989C9427E236A10048776B /* MainView.swift */,
+				0005A77927E2809E0013BE83 /* VirtualMachineView.swift */,
+				006504E627F9D59300723BCA /* SettingsView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		00989C5F27E2340C0048776B /* virtualOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00989C8527E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOS" */;
+			buildPhases = (
+				00989C5C27E2340C0048776B /* Sources */,
+				00989C5D27E2340C0048776B /* Frameworks */,
+				00989C5E27E2340C0048776B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = virtualOS;
+			productName = virtualOS;
+			productReference = 00989C6027E2340C0048776B /* virtualOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		00989C7027E2340D0048776B /* virtualOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00989C8827E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOSTests" */;
+			buildPhases = (
+				00989C6D27E2340D0048776B /* Sources */,
+				00989C6E27E2340D0048776B /* Frameworks */,
+				00989C6F27E2340D0048776B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				00989C7327E2340D0048776B /* PBXTargetDependency */,
+			);
+			name = virtualOSTests;
+			productName = virtualOSTests;
+			productReference = 00989C7127E2340D0048776B /* virtualOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		00989C7A27E2340D0048776B /* virtualOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00989C8B27E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOSUITests" */;
+			buildPhases = (
+				00989C7727E2340D0048776B /* Sources */,
+				00989C7827E2340D0048776B /* Frameworks */,
+				00989C7927E2340D0048776B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				00989C7D27E2340D0048776B /* PBXTargetDependency */,
+			);
+			name = virtualOSUITests;
+			productName = virtualOSUITests;
+			productReference = 00989C7B27E2340D0048776B /* virtualOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		00989C5827E2340C0048776B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1330;
+				LastUpgradeCheck = 1330;
+				TargetAttributes = {
+					00989C5F27E2340C0048776B = {
+						CreatedOnToolsVersion = 13.3;
+					};
+					00989C7027E2340D0048776B = {
+						CreatedOnToolsVersion = 13.3;
+						TestTargetID = 00989C5F27E2340C0048776B;
+					};
+					00989C7A27E2340D0048776B = {
+						CreatedOnToolsVersion = 13.3;
+						TestTargetID = 00989C5F27E2340C0048776B;
+					};
+				};
+			};
+			buildConfigurationList = 00989C5B27E2340C0048776B /* Build configuration list for PBXProject "virtualOS" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 00989C5727E2340C0048776B;
+			productRefGroup = 00989C6127E2340C0048776B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				00989C5F27E2340C0048776B /* virtualOS */,
+				00989C7027E2340D0048776B /* virtualOSTests */,
+				00989C7A27E2340D0048776B /* virtualOSUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		00989C5E27E2340C0048776B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				007987AF27E2487200960D74 /* LICENSE in Resources */,
+				00989C6B27E2340D0048776B /* Preview Assets.xcassets in Resources */,
+				00989C6827E2340D0048776B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C6F27E2340D0048776B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C7927E2340D0048776B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00989C5C27E2340C0048776B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00989C9627E236A10048776B /* MainView.swift in Sources */,
+				0005A77A27E2809E0013BE83 /* VirtualMachineView.swift in Sources */,
+				00989C6427E2340C0048776B /* virtualOSApp.swift in Sources */,
+				007987B127E24A8400960D74 /* VirtualMac.swift in Sources */,
+				0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */,
+				006504E727F9D59300723BCA /* SettingsView.swift in Sources */,
+				00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */,
+				0090AF6127E25F6F0077D35F /* UInt64+Byte.swift in Sources */,
+				0044A65527F601E60007988A /* MainViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C6D27E2340D0048776B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00989C7627E2340D0048776B /* virtualOSTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00989C7727E2340D0048776B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00989C8227E2340D0048776B /* virtualOSUITestsLaunchTests.swift in Sources */,
+				00989C8027E2340D0048776B /* virtualOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		00989C7327E2340D0048776B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00989C5F27E2340C0048776B /* virtualOS */;
+			targetProxy = 00989C7227E2340D0048776B /* PBXContainerItemProxy */;
+		};
+		00989C7D27E2340D0048776B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00989C5F27E2340C0048776B /* virtualOS */;
+			targetProxy = 00989C7C27E2340D0048776B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		00989C8327E2340D0048776B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		00989C8427E2340D0048776B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		00989C8627E2340D0048776B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = virtualOS/virtualOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = virtualOS/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		00989C8727E2340D0048776B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = virtualOS/virtualOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = virtualOS/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		00989C8927E2340D0048776B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/virtualOS.app/Contents/MacOS/virtualOS";
+			};
+			name = Debug;
+		};
+		00989C8A27E2340D0048776B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/virtualOS.app/Contents/MacOS/virtualOS";
+			};
+			name = Release;
+		};
+		00989C8C27E2340D0048776B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOSUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = virtualOS;
+			};
+			name = Debug;
+		};
+		00989C8D27E2340D0048776B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2AD47BTDQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOSUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = virtualOS;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		00989C5B27E2340C0048776B /* Build configuration list for PBXProject "virtualOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00989C8327E2340D0048776B /* Debug */,
+				00989C8427E2340D0048776B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00989C8527E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00989C8627E2340D0048776B /* Debug */,
+				00989C8727E2340D0048776B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00989C8827E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00989C8927E2340D0048776B /* Debug */,
+				00989C8A27E2340D0048776B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00989C8B27E2340D0048776B /* Build configuration list for PBXNativeTarget "virtualOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00989C8C27E2340D0048776B /* Debug */,
+				00989C8D27E2340D0048776B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 00989C5827E2340C0048776B /* Project object */;
+}
