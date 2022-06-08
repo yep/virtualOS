@@ -27,6 +27,7 @@ final class VirtualMac: ObservableObject {
     typealias InstallCompletionHander = (String?, VZVirtualMachine?) -> Void    
 
     var parameters = Parameters()
+    var versionString = "(unknown)"
     var virtualMachineConfiguration: VirtualMacConfiguration?
     fileprivate var progressObserver: NSKeyValueObservation?
     fileprivate var downloadTask: URLSessionDownloadTask?
@@ -264,7 +265,7 @@ final class VirtualMac: ObservableObject {
     
     fileprivate func readSupportedConfiguration(from restoreImage: VZMacOSRestoreImage) -> (VZMacOSConfigurationRequirements?, String?) {
         let version = restoreImage.operatingSystemVersion
-        let versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) (Build \(restoreImage.buildVersion))"
+        versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) (Build \(restoreImage.buildVersion))"
         debugLog("Restore image operating system version: \(versionString)")
 
         guard let mostFeaturefulSupportedConfiguration = restoreImage.mostFeaturefulSupportedConfiguration else {

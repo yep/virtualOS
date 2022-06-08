@@ -255,10 +255,11 @@ final class MainViewModel: NSObject, ObservableObject {
                 buttonLabel = "Stop"
             case .Installing:
                 if let installProgress = installProgress {
+                    statusLabel = "Installing macOS \(virtualMac.versionString): "
                     if installProgress.completedUnitCount == 0 {
-                        statusLabel = "Installing: Waiting for begin …"
+                        statusLabel = statusLabel + "Waiting for begin …"
                     } else {
-                        statusLabel = "Installing: \(installProgress.completedUnitCount)%"
+                        statusLabel = statusLabel + "\(installProgress.completedUnitCount)%"
                     }
                 }
                 buttonLabel = "Stop"
