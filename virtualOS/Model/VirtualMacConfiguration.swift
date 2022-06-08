@@ -32,7 +32,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         }
     }
 
-    func getBestHardwareConfig(parameters: inout VirtualMac.Parameters) {
+    func setDefault(parameters: inout VirtualMac.Parameters) {
         let cpuCountMax = computeCPUCount()
         let bytesMax = VZVirtualMachineConfiguration.maximumAllowedMemorySize
         let bytesMaxMinus2GB = bytesMax - UInt64(2).gigabytesToBytes() // substract 2 GB

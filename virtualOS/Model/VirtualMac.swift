@@ -73,7 +73,7 @@ final class VirtualMac: ObservableObject {
             if let errorString = errorString {
                 completionHandler(errorString, nil)
             } else {
-                self.loadRestoreImage(delegate: delegate, progressHandler: progressHandler, completionHandler: completionHandler)
+                self.loadAndInstallRestoreImage(delegate: delegate, progressHandler: progressHandler, completionHandler: completionHandler)
             }
         }
     }
@@ -87,14 +87,14 @@ final class VirtualMac: ObservableObject {
         VZMacOSRestoreImage.load(from: URL.restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
                 case .success(let restoreImage):
-                    self.loaded(restoreImage: restoreImage, completionHandler: completionHandler)
+                    self.didLoad(restoreImage: restoreImage, completionHandler: completionHandler)
                 case .failure(_):
                     completionHandler("Error: failure reading restore image")
             }
         }
     }
 
-    func loadRestoreImage(delegate: VZVirtualMachineDelegate, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander)  {
+    func loadAndInstallRestoreImage(delegate: VZVirtualMachineDelegate, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander)  {
         VZMacOSRestoreImage.load(from: URL.restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
                 case .success(let restoreImage):
@@ -106,7 +106,7 @@ final class VirtualMac: ObservableObject {
                         completionHandler("Error: No virtual machine configuration found", nil)
                     }
                 case .failure(let failure):
-                    completionHandler("Loading restore image failed: \(failure)", nil)
+                    completionHandler("Error: Loading restore image failed: \(failure)", nil)
                     return
             }
         }
@@ -135,6 +135,7 @@ final class VirtualMac: ObservableObject {
         virtualMachine.delegate = delegate
 
         debugLog("Using \(virtualMacConfiguration.cpuCount) cores, \(virtualMacConfiguration.memorySize.bytesToGigabytes()) GB RAM and screen size \(parameters.screenWidth)x\(parameters.screenHeight) px at \(parameters.pixelsPerInch) ppi")
+        
         return virtualMachine
     }
 
@@ -189,12 +190,12 @@ final class VirtualMac: ObservableObject {
                 case let .failure(error):
                     completionHandler(error.localizedDescription)
                 case let .success(restoreImage):
-                    downloaded(restoreImage: restoreImage, progressHandler: progressHandler, completionHandler: completionHandler)
+                    download(restoreImage: restoreImage, progressHandler: progressHandler, completionHandler: completionHandler)
             }
         }
     }
 
-    fileprivate func downloaded(restoreImage: VZMacOSRestoreImage, progressHandler: @escaping ProgressHandler, completionHandler: @escaping CompletionHander) {
+    fileprivate func download(restoreImage: VZMacOSRestoreImage, progressHandler: @escaping ProgressHandler, completionHandler: @escaping CompletionHander) {
         let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { localURL, response, error in
             if let error = error {
                 completionHandler(error.localizedDescription)
@@ -219,38 +220,31 @@ final class VirtualMac: ObservableObject {
         downloadTask.resume()
     }
 
-    fileprivate func loaded(restoreImage: VZMacOSRestoreImage, completionHandler: @escaping CompletionHander) {
+    fileprivate func didLoad(restoreImage: VZMacOSRestoreImage, completionHandler: @escaping CompletionHander) {
+        let (_, errorString) = readSupportedConfiguration(from: restoreImage)
+        if errorString != nil {
+            completionHandler(errorString)
+            return
+        }
+
         virtualMachineConfiguration = VirtualMacConfiguration()
-        virtualMachineConfiguration?.getBestHardwareConfig(parameters: &parameters)
+        virtualMachineConfiguration?.setDefault(parameters: &parameters)
+        debugLog("Parameters from restore image: \(parameters)")
 
-        guard let mostFeaturefulSupportedConfiguration = restoreImage.mostFeaturefulSupportedConfiguration else {
-            completionHandler("Error: No supported hardware configuration available")
+        if let errorString = writeParametersToDisk() {
+            completionHandler(errorString)
             return
         }
-
-        parameters.cpuCountMin = mostFeaturefulSupportedConfiguration.minimumSupportedCPUCount
-        parameters.memorySizeInGBMin = mostFeaturefulSupportedConfiguration.minimumSupportedMemorySize.bytesToGigabytes()
-
-        if let errorMessage = writeParametersToDisk() {
-            completionHandler(errorMessage)
-            return
-        }
-        let version = restoreImage.operatingSystemVersion
-        debugLog("Restore Image operating system version: \(version.majorVersion).\(version.minorVersion).\(version.patchVersion) (Build \(restoreImage.buildVersion))")
-        debugLog("Host hardware model is supported: \(mostFeaturefulSupportedConfiguration.hardwareModel.isSupported)")
-        debugLog("Parameters from disk image: \(parameters)")
 
         completionHandler(nil) // no error
     }
 
     fileprivate func restore(from restoreImage: VZMacOSRestoreImage) -> String? {
-        guard let mostFeaturefulSupportedConfiguration = restoreImage.mostFeaturefulSupportedConfiguration else {
-            return "Error: No supported hardware configuration available"
+        let (mostFeaturefulSupportedConfiguration, errorString) = readSupportedConfiguration(from: restoreImage)
+        guard let mostFeaturefulSupportedConfiguration = mostFeaturefulSupportedConfiguration else {
+            return errorString
         }
-
-        parameters.cpuCountMin = mostFeaturefulSupportedConfiguration.minimumSupportedCPUCount
-        parameters.memorySizeInGBMin = mostFeaturefulSupportedConfiguration.minimumSupportedMemorySize.bytesToGigabytes()
-
+        
         if let errorString = VirtualMac.createDiskImage(sizeInGB: parameters.diskSizeInGB) {
             return errorString
         }
@@ -266,6 +260,24 @@ final class VirtualMac: ObservableObject {
         }
 
         return nil
+    }
+    
+    fileprivate func readSupportedConfiguration(from restoreImage: VZMacOSRestoreImage) -> (VZMacOSConfigurationRequirements?, String?) {
+        let version = restoreImage.operatingSystemVersion
+        let versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) (Build \(restoreImage.buildVersion))"
+        debugLog("Restore image operating system version: \(versionString)")
+
+        guard let mostFeaturefulSupportedConfiguration = restoreImage.mostFeaturefulSupportedConfiguration else {
+            return (nil, "Error: Restore image for macOS version \(versionString) is not supported on this machine")
+        }
+        guard mostFeaturefulSupportedConfiguration.hardwareModel.isSupported else {
+            return (nil, "Error: Hardware model required by restore image for macOS version \(versionString) is not supported on this machine")
+        }
+
+        parameters.cpuCountMin = mostFeaturefulSupportedConfiguration.minimumSupportedCPUCount
+        parameters.memorySizeInGBMin = mostFeaturefulSupportedConfiguration.minimumSupportedMemorySize.bytesToGigabytes()
+
+        return (mostFeaturefulSupportedConfiguration, nil) // no error
     }
 
     fileprivate func startInstall(ipswURL: URL, virtualMacConfiguration: VirtualMacConfiguration, delegate: VZVirtualMachineDelegate, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander) {
@@ -316,18 +328,18 @@ final class VirtualMac: ObservableObject {
     }
 
     static func createDiskImage(sizeInGB: UInt64) -> String? {
-        let diskFd = open(URL.diskImageURL.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
-        if diskFd == -1 {
+        let diskImageFileDescriptor = open(URL.diskImageURL.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
+        if diskImageFileDescriptor == -1 {
             return "Error: Cannot create disk image"
         }
 
         let diskSize = sizeInGB.gigabytesToBytes()
-        var result = ftruncate(diskFd, Int64(diskSize))
+        var result = ftruncate(diskImageFileDescriptor, Int64(diskSize))
         if result != 0 {
             return "Error: Expanding disk image failed"
         }
 
-        result = close(diskFd)
+        result = close(diskImageFileDescriptor)
         if result != 0 {
             return "Error: Failed to close the disk image"
         }

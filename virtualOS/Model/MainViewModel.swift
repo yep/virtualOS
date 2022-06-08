@@ -170,12 +170,12 @@ final class MainViewModel: NSObject, ObservableObject {
             debugLog("Install progress: \(progress.completedUnitCount)%")
             self.installProgress = progress
             self.updateLabels(for: self.state)
-        } completionHandler: { (errorMessage: String?, virtualMachine: VZVirtualMachine?) in
+        } completionHandler: { (errorString: String?, virtualMachine: VZVirtualMachine?) in
             DispatchQueue.main.async {
                 self.installProgress = nil
             }
-            if let errorMessage = errorMessage {
-                self.display(errorString: errorMessage)
+            if let errorString = errorString {
+                self.display(errorString: errorString)
             } else if let virtualMachine = virtualMachine {
                 self.start(virtualMachine: virtualMachine)
             } else {
