@@ -171,7 +171,9 @@ final class MainViewModel: NSObject, ObservableObject {
             self.installProgress = progress
             self.updateLabels(for: self.state)
         } completionHandler: { (errorMessage: String?, virtualMachine: VZVirtualMachine?) in
-            self.installProgress = nil
+            DispatchQueue.main.async {
+                self.installProgress = nil
+            }
             if let errorMessage = errorMessage {
                 self.display(errorString: errorMessage)
             } else if let virtualMachine = virtualMachine {
@@ -226,8 +228,19 @@ final class MainViewModel: NSObject, ObservableObject {
 
     fileprivate func display(errorString: String) {
         debugLog(errorString)
-        self.state = .Stopped
-        self.statusLabel = errorString
+        
+        let displayErrorString = {
+            self.state = .Stopped
+            self.statusLabel = errorString
+        }
+        
+        if Thread.isMainThread {
+            displayErrorString()
+        } else {
+            DispatchQueue.main.async {
+                displayErrorString()
+            }
+        }
     }
 
     fileprivate func updateLabels(for: State) {
