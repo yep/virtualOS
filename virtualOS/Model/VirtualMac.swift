@@ -8,6 +8,7 @@
 #if arch(arm64)
 
 import Virtualization
+import Combine
 
 final class VirtualMac: ObservableObject {
     struct Parameters: Codable {
@@ -29,7 +30,7 @@ final class VirtualMac: ObservableObject {
     var parameters = Parameters()
     var versionString = "(unknown)"
     var virtualMachineConfiguration: VirtualMacConfiguration?
-    fileprivate var progressObserver: NSKeyValueObservation?
+    var progressObserverCancellable: Cancellable?
     fileprivate var downloadTask: URLSessionDownloadTask?
 
     func readFromDisk(delegate: VZVirtualMachineDelegate) -> String? {
@@ -213,11 +214,12 @@ final class VirtualMac: ObservableObject {
         }
 
         self.downloadTask = downloadTask
-        progressObserver = downloadTask.progress.observe(\.fractionCompleted, options: [.initial, .new]) { (progress, change) in
-            DispatchQueue.main.async {
+        
+        progressObserverCancellable = downloadTask.progress.publisher(for: \.fractionCompleted)
+            .throttle(for: 1.0, scheduler: RunLoop.main, latest: true)
+            .sink() { (progress) in
                 progressHandler(downloadTask.progress)
             }
-        }
         downloadTask.resume()
     }
 
@@ -301,9 +303,11 @@ final class VirtualMac: ObservableObject {
                 }
             }
 
-            self.progressObserver = installer.progress.observe(\.fractionCompleted, options: [.initial, .new]) { (progress, change) in
-                progressHandler(installer.progress)
-            }
+            self.progressObserverCancellable = installer.progress.publisher(for: \.fractionCompleted)
+                .throttle(for: 1.0, scheduler: RunLoop.main, latest: true)
+                .sink() { (progress) in
+                    progressHandler(installer.progress)
+                }
         }
     }
 

@@ -25,7 +25,7 @@ final class MainViewModel: NSObject, ObservableObject {
     @Published var statusLabel = ""
     @Published var buttonLabel = ""
     @Published var buttonDisabled = false
-    @Published var installProgress: Progress?
+    @Published var progress: Progress?
     @Published var showLicenseInformationModal = false
     @Published var showConfirmationAlert = false
     @Published var licenseInformationTitleString = ""
@@ -101,8 +101,9 @@ final class MainViewModel: NSObject, ObservableObject {
     func loadLicenseInformationFromBundle() {
         if let filepath = Bundle.main.path(forResource: "LICENSE", ofType: "") {
             do {
+                licenseInformationString = "Restore image and virtual machine are stored at:\n\(NSHomeDirectory())\n\n–\n\n"
                 let contents = try String(contentsOfFile: filepath)
-                licenseInformationString = contents
+                licenseInformationString += contents
             } catch {
                 licenseInformationString = "Failed to load license information"
             }
@@ -152,7 +153,7 @@ final class MainViewModel: NSObject, ObservableObject {
 
         virtualMac.downloadRestoreImage { (progress: Progress) in
             debugLog("Download progress: \(progress.fractionCompleted * 100)%")
-            self.installProgress = progress
+            self.progress = progress
             self.updateLabels(for: self.state)
         } completionHandler: { (errorString: String?) in
             if let errorString = errorString {
@@ -168,11 +169,11 @@ final class MainViewModel: NSObject, ObservableObject {
         state = .Installing
         virtualMac.install(delegate: self) { (progress: Progress) in
             debugLog("Install progress: \(progress.completedUnitCount)%")
-            self.installProgress = progress
+            self.progress = progress
             self.updateLabels(for: self.state)
         } completionHandler: { (errorString: String?, virtualMachine: VZVirtualMachine?) in
             DispatchQueue.main.async {
-                self.installProgress = nil
+                self.progress = nil
             }
             if let errorString = errorString {
                 self.display(errorString: errorString)
@@ -249,17 +250,17 @@ final class MainViewModel: NSObject, ObservableObject {
                 statusLabel = state.rawValue
                 buttonLabel = "Start"
             case .Downloading:
-                if let installProgress = installProgress {
-                    statusLabel = String(format: "Downloading restore image: %2.2f%%", installProgress.fractionCompleted * 100)
+                if let progress = progress {
+                    updateDownloadProgress(progress)
                 }
                 buttonLabel = "Stop"
             case .Installing:
-                if let installProgress = installProgress {
+                if let progress = progress {
                     statusLabel = "Installing macOS \(virtualMac.versionString): "
-                    if installProgress.completedUnitCount == 0 {
+                    if progress.completedUnitCount == 0 {
                         statusLabel = statusLabel + "Waiting for begin …"
                     } else {
-                        statusLabel = statusLabel + "\(installProgress.completedUnitCount)%"
+                        statusLabel = statusLabel + "\(progress.completedUnitCount)%"
                     }
                 }
                 buttonLabel = "Stop"
@@ -273,6 +274,20 @@ final class MainViewModel: NSObject, ObservableObject {
         } else {
             buttonDisabled = false
         }
+    }
+    
+    fileprivate func updateDownloadProgress(_ progress: Progress) {
+        var statusText = String(format: "Downloading restore image: %2.2f%%", progress.fractionCompleted * 100)
+        
+        if let byteCompletedCount = progress.userInfo[ProgressUserInfoKey("NSProgressByteCompletedCountKey")] as? Int,
+           let byteTotalCount = progress.userInfo[ProgressUserInfoKey("NSProgressByteTotalCountKey")] as? Int
+        {
+            let mbCompleted = byteCompletedCount / (1024 * 1024)
+            let mbTotal     = byteTotalCount / (1024 * 1024)
+            statusText += " (\(mbCompleted) of \(mbTotal) MB)"
+        }
+        
+        statusLabel = statusText
     }
 }
 
