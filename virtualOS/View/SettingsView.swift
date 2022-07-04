@@ -2,96 +2,102 @@
 //  SettingsView.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch on 03.04.22.
+//  Created by Jahn Bertsch on 25.05.22.
 //
 
 #if arch(arm64)
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var viewModel: MainViewModel
-    fileprivate let sliderTextWidth = CGFloat(150)
-    @State fileprivate var cpuCountSliderValue: Float = 0 {
-        didSet {
-            viewModel.virtualMac.parameters.cpuCount = Int(cpuCountSliderValue)
+    
+    enum RestoreImageType: String {
+        case latest = "Downloads latest restore image from Apple."
+        case custom = "Select custom restore image (.ipsw)\nFor example, download from [https://ipsw.me](https://ipsw.me/product/Mac)"
+    }
+    @State var diskSize = String(UserDefaults.standard.diskSize)
+    @State var restoreImageType = RestoreImageType.latest
+    var restoreImageInfo: String {
+        if let restoreImageURL = viewModel.customRestoreImageURL {
+            return "Using \(restoreImageURL.path)"
+        } else {
+            return restoreImageType.rawValue
         }
     }
-    @State fileprivate var memorySliderValue: Float = 0 {
-        didSet {
-            viewModel.virtualMac.parameters.memorySizeInGB = UInt64(memorySliderValue)
+    
+    fileprivate func selectRestoreImage() {
+        guard let ipswContentType = UTType(filenameExtension: "ipsw") else {
+            return
+        }
+        let openPanel = NSOpenPanel()
+        openPanel.allowsMultipleSelection = false
+        openPanel.canChooseFiles = true
+        openPanel.allowedContentTypes = [ipswContentType]
+        if openPanel.runModal() == .OK,
+           let selectedURL = openPanel.url
+        {
+            viewModel.customRestoreImageURL = selectedURL
         }
     }
-    @State fileprivate var screenWidthValue: Float = 0 {
-        didSet {
-            viewModel.virtualMac.parameters.screenWidth = Int(screenWidthValue)
-        }
-    }
-    @State fileprivate var screenHeightValue: Float = 0 {
-        didSet {
-            viewModel.virtualMac.parameters.screenHeight = Int(screenHeightValue)
-        }
-    }
-
+    
     var body: some View {
         VStack {
-            Spacer()
-            VStack {
-                let parameters = viewModel.virtualMac.parameters
-                Text("Virtual Machine Configuration").font(.title)
-
-                Slider(value: Binding(get: {
-                    cpuCountSliderValue
-                }, set: { (newValue) in
-                    cpuCountSliderValue = newValue
-                }), in: Float(parameters.cpuCountMin) ... Float(parameters.cpuCountMax), step: 1) {
-                    Text("CPU Count: \(viewModel.virtualMac.parameters.cpuCount)")
-                        .frame(minWidth: sliderTextWidth, alignment: .leading)
+            Text("Settings")
+            Form {
+                HStack {
+                    TextField("Hard Disk Size:", text: $diskSize)
+                        .frame(maxWidth: 130)
+                        .onChange(of: diskSize) { newValue in
+                            if let newDiskSize = Int(diskSize) {
+                                viewModel.diskSize = newDiskSize
+                            } else {
+                                diskSize = ""
+                            }
+                        }
+                    Text("(in GB)")
                 }
-
-                Slider(value: Binding(get: {
-                    memorySliderValue
-                }, set: { (newValue) in
-                    memorySliderValue = newValue
-                }), in: Float(parameters.memorySizeInGBMin) ... Float(parameters.memorySizeInGBMax), step: 1) {
-                    Text("RAM: \(viewModel.virtualMac.parameters.memorySizeInGB) GB")
-                        .frame(minWidth: sliderTextWidth, alignment: .leading)
+                
+                Picker("Restore Image:", selection: $restoreImageType) {
+                    Text("Latest").tag(RestoreImageType.latest)
+                    Text("Custom").tag(RestoreImageType.custom)
                 }
+                .pickerStyle(.inline)
 
-                Slider(value: Binding(get: {
-                    screenWidthValue
-                }, set: { (newValue) in
-                    screenWidthValue = newValue
-                }), in: 800 ... Float(NSScreen.main?.frame.width ?? CGFloat(parameters.screenWidth)), step: 100) {
-                    Text("Screen Width: \(viewModel.virtualMac.parameters.screenWidth) px")
-                        .frame(minWidth: sliderTextWidth, alignment: .leading)
+                HStack {
+                    Button("Select Restore Image") {
+                        selectRestoreImage()
+                    }
+                    .disabled(restoreImageType == .latest)
                 }
-
-                Slider(value: Binding(get: {
-                    screenHeightValue
-                }, set: { (newValue) in
-                    screenHeightValue = newValue
-                }), in: 600 ... Float(NSScreen.main?.frame.height ?? CGFloat(parameters.screenHeight)), step: 50) {
-                    Text("Screen Height: \(viewModel.virtualMac.parameters.screenHeight) px")
-                        .frame(minWidth: sliderTextWidth, alignment: .leading)
-                }
+                
+                Text(.init(restoreImageInfo))
+                    .font(.caption)
+                    .frame(maxWidth: 270, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(nil)
+                    .disabled(restoreImageType == .latest)
             }
-            .padding()
-            .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                .stroke(.tertiary, lineWidth: 1)
-            }
+            .padding(.bottom)
 
-            Spacer()
+            Text("Virtual machine and restore image location:\n \(URL.basePath)\n\nTo open this directory:\nIn Finder, in the 'Go' menu, select 'Go to Folder' and enter the above URL.")
+            .frame(maxWidth: 370, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .lineLimit(nil)
+            .padding(.bottom)
+            .textSelection(.enabled)
+            .font(.caption)
+
+            Button("OK") {
+                viewModel.showSettings = !viewModel.showSettings
+            }
+            .keyboardShortcut(.defaultAction)
         }
         .padding()
-        .frame(maxWidth: 400)
-        .onAppear {
-            let parameters = viewModel.virtualMac.parameters
-            cpuCountSliderValue     = Float(parameters.cpuCount)
-            memorySliderValue       = Float(parameters.memorySizeInGB)
-            screenWidthValue        = Float(parameters.screenWidth)
-            screenHeightValue       = Float(parameters.screenHeight)
+        .frame(minWidth: 420)
+        .onAppear() {
+            diskSize = String(viewModel.diskSize)
         }
     }
 }
@@ -100,7 +106,6 @@ struct SettingsViewProvider_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             SettingsView(viewModel: MainViewModel())
-                .colorScheme(.light)
         }
     }
 }

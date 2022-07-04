@@ -25,8 +25,19 @@ struct MainView: View {
                 }.disabled(viewModel.buttonDisabled)
             }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
 
-            if viewModel.settingsShown {
-                SettingsView(viewModel: viewModel)
+            if viewModel.showConfigurationView {
+                ConfigurationView(viewModel: viewModel)
+            } else if viewModel.showSettingsInfo {
+                VStack {
+                    Spacer()
+                    Button("Open Settings") {
+                        viewModel.showSettings = !viewModel.showSettings
+                    }
+                    Text("Open settings for basic virtual machine configuration, then press Start to install.")
+                        .lineLimit(nil)
+                        .font(.caption)
+                    Spacer()
+                }
             } else {
                 VirtualMachineView(virtualMachine: $viewModel.virtualMachine)
             }

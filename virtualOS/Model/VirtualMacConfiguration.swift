@@ -23,12 +23,12 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
     func readFromDisk(using parameters: inout VirtualMac.Parameters) {
         let (errorString, platform) = readPlaformFromDisk()
         if let errorString = errorString {
-            debugLog(errorString)
+            virtualOSApp.debugLog(errorString)
         } else if let platform = platform {
             self.platform = platform
             configure(with: &parameters)
         } else {
-            debugLog("Error: Reading platform from disk failed")
+            virtualOSApp.debugLog("Error: Reading platform from disk failed")
         }
     }
 
@@ -73,7 +73,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
                 options: [.allowOverwrite]
             )
         } catch {
-            debugLog("Error: could not create auxiliary storage device")
+            virtualOSApp.debugLog("Error: could not create auxiliary storage device")
             return false
         }
 
@@ -81,7 +81,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
             try platformConfiguration.hardwareModel.dataRepresentation.write(to: URL.hardwareModelURL)
             try platformConfiguration.machineIdentifier.dataRepresentation.write(to: URL.machineIdentifierURL)
         } catch {
-            debugLog("Error: could store platform information to disk")
+            virtualOSApp.debugLog("Error: could store platform information to disk")
             return false
         }
 
@@ -101,7 +101,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
 
         if parameters.microphoneEnabled {
             AVCaptureDevice.requestAccess(for: .audio) { (granted: Bool) in
-                debugLog("Microphone request granted: \(granted)")
+                virtualOSApp.debugLog("Microphone request granted: \(granted)")
             }
 
             let inputStreamConfiguration = VZVirtioSoundDeviceInputStreamConfiguration()
@@ -131,7 +131,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
             let blockDeviceConfiguration = VZVirtioBlockDeviceConfiguration(attachment: diskImageStorageDeviceAttachment)
             storageDevices = [blockDeviceConfiguration]
         } else {
-            debugLog("Error: could not create storage device")
+            virtualOSApp.debugLog("Error: could not create storage device")
         }
     }
 
@@ -168,7 +168,6 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         }
         macPlatform.hardwareModel = hardwareModel
 
-        // Retrieve the machine identifier; you should save this value to disk during installation.
         guard let machineIdentifierData = try? Data(contentsOf: URL.machineIdentifierURL) else {
             return ("Error: Failed to retrieve machine identifier data.", nil)
         }

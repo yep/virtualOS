@@ -8,9 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		0005A77A27E2809E0013BE83 /* VirtualMachineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0005A77927E2809E0013BE83 /* VirtualMachineView.swift */; };
+		002E64922871B2DD00CE95A0 /* UserDefaults+Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002E64912871B2DD00CE95A0 /* UserDefaults+Settings.swift */; };
 		0044A65527F601E60007988A /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0044A65427F601E60007988A /* MainViewModel.swift */; };
 		0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0044A65927F76BD30007988A /* URL+Paths.swift */; };
-		006504E727F9D59300723BCA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006504E627F9D59300723BCA /* SettingsView.swift */; };
+		006504E727F9D59300723BCA /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006504E627F9D59300723BCA /* ConfigurationView.swift */; };
 		007987AF27E2487200960D74 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 007987AE27E2487200960D74 /* LICENSE */; };
 		007987B127E24A8400960D74 /* VirtualMac.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007987B027E24A8400960D74 /* VirtualMac.swift */; };
 		0090AF6127E25F6F0077D35F /* UInt64+Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */; };
@@ -22,6 +23,7 @@
 		00989C8227E2340D0048776B /* virtualOSUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C8127E2340D0048776B /* virtualOSUITestsLaunchTests.swift */; };
 		00989C9627E236A10048776B /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9427E236A10048776B /* MainView.swift */; };
 		00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9927E238930048776B /* VirtualMacConfiguration.swift */; };
+		00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,9 +45,10 @@
 
 /* Begin PBXFileReference section */
 		0005A77927E2809E0013BE83 /* VirtualMachineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMachineView.swift; sourceTree = "<group>"; };
+		002E64912871B2DD00CE95A0 /* UserDefaults+Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+Settings.swift"; sourceTree = "<group>"; };
 		0044A65427F601E60007988A /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		0044A65927F76BD30007988A /* URL+Paths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Paths.swift"; sourceTree = "<group>"; };
-		006504E627F9D59300723BCA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		006504E627F9D59300723BCA /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
 		007987AE27E2487200960D74 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		007987B027E24A8400960D74 /* VirtualMac.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMac.swift; sourceTree = "<group>"; };
 		0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UInt64+Byte.swift"; sourceTree = "<group>"; };
@@ -61,6 +64,7 @@
 		00989C8127E2340D0048776B /* virtualOSUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = virtualOSUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		00989C9427E236A10048776B /* MainView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		00989C9927E238930048776B /* VirtualMacConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMacConfiguration.swift; sourceTree = "<group>"; };
+		00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		00BA26AC2826DAF200E80B76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -94,6 +98,7 @@
 			children = (
 				0090AF6027E25F6F0077D35F /* UInt64+Byte.swift */,
 				0044A65927F76BD30007988A /* URL+Paths.swift */,
+				002E64912871B2DD00CE95A0 /* UserDefaults+Settings.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -174,7 +179,8 @@
 			children = (
 				00989C9427E236A10048776B /* MainView.swift */,
 				0005A77927E2809E0013BE83 /* VirtualMachineView.swift */,
-				006504E627F9D59300723BCA /* SettingsView.swift */,
+				006504E627F9D59300723BCA /* ConfigurationView.swift */,
+				00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -243,7 +249,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1330;
-				LastUpgradeCheck = 1330;
+				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					00989C5F27E2340C0048776B = {
 						CreatedOnToolsVersion = 13.3;
@@ -310,12 +316,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				002E64922871B2DD00CE95A0 /* UserDefaults+Settings.swift in Sources */,
 				00989C9627E236A10048776B /* MainView.swift in Sources */,
 				0005A77A27E2809E0013BE83 /* VirtualMachineView.swift in Sources */,
 				00989C6427E2340C0048776B /* virtualOSApp.swift in Sources */,
 				007987B127E24A8400960D74 /* VirtualMac.swift in Sources */,
 				0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */,
-				006504E727F9D59300723BCA /* SettingsView.swift in Sources */,
+				00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */,
+				006504E727F9D59300723BCA /* ConfigurationView.swift in Sources */,
 				00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */,
 				0090AF6127E25F6F0077D35F /* UInt64+Byte.swift in Sources */,
 				0044A65527F601E60007988A /* MainViewModel.swift in Sources */,
@@ -388,6 +396,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -448,6 +457,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -474,23 +484,26 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = virtualOS/virtualOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = virtualOS/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -504,23 +517,26 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = virtualOS/virtualOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = virtualOS/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -535,6 +551,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
@@ -554,6 +571,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
@@ -572,6 +590,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -589,6 +608,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;

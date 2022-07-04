@@ -7,18 +7,15 @@
 
 import Foundation
 import SwiftUI
-
-func debugLog(_ message: String) {
-#if DEBUG
-    print(message)
-#endif
-}
+import OSLog
 
 typealias CompletionHander = (String?) -> Void
 typealias ProgressHandler = (Progress) -> Void
 
 @main
 struct virtualOSApp: App {
+    static let logger = Logger(subsystem: "com.github.yep.virtualOS", category: "main")
+    
     #if arch(arm64)
     @ObservedObject var viewModel = MainViewModel()
     #endif
@@ -42,6 +39,9 @@ struct virtualOSApp: App {
             .alert(viewModel.licenseInformationTitleString, isPresented: $viewModel.showLicenseInformationModal, actions: {}, message: {
                 Text(viewModel.licenseInformationString)
             })
+            .sheet(isPresented: $viewModel.showSettings, content: {
+                SettingsView(viewModel: viewModel)
+            })
 
             #else
             Text("Sorry, virtualization requires an Apple Silicon computer.")
@@ -54,6 +54,11 @@ struct virtualOSApp: App {
                 Button("About virtualOS") {
                     viewModel.showLicenseInformationModal = !viewModel.showLicenseInformationModal
                 }
+            }
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings") {
+                    viewModel.showSettings = !viewModel.showSettings
+                }.keyboardShortcut(",")
             }
             CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .newItem) {
@@ -71,5 +76,9 @@ struct virtualOSApp: App {
             }
         }
         #endif
+    }
+    
+    static func debugLog(_ message: String) {
+        Self.logger.notice("\(message, privacy: .public)")
     }
 }

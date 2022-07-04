@@ -15,7 +15,7 @@ final class VirtualMac: ObservableObject {
         var cpuCount = 1
         var cpuCountMin = 1
         var cpuCountMax = 2
-        var diskSizeInGB: UInt64 = 64
+        var diskSizeInGB: UInt64 = UInt64(UserDefaults.standard.diskSize)
         var memorySizeInGB: UInt64 = 1
         var memorySizeInGBMin: UInt64 = 1
         var memorySizeInGBMax: UInt64 = 2
@@ -70,40 +70,50 @@ final class VirtualMac: ObservableObject {
         }
     }
 
-    func install(delegate: VZVirtualMachineDelegate, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander) {
-        loadParametersFromRestoreImage { (errorString: String?) in
+    func install(delegate: VZVirtualMachineDelegate, customRestoreImageURL: URL?, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander) {
+        loadParametersFromRestoreImage(customRestoreImageURL: customRestoreImageURL) { (errorString: String?) in
             if let errorString = errorString {
                 completionHandler(errorString, nil)
             } else {
-                self.loadAndInstallRestoreImage(delegate: delegate, progressHandler: progressHandler, completionHandler: completionHandler)
+                self.loadAndInstallRestoreImage(delegate: delegate, customRestoreImageURL: customRestoreImageURL, progressHandler: progressHandler, completionHandler: completionHandler)
             }
         }
     }
 
-    func loadParametersFromRestoreImage(completionHandler: @escaping CompletionHander) {
+    func loadParametersFromRestoreImage(customRestoreImageURL: URL?, completionHandler: @escaping CompletionHander) {
         if let errorString = createBundle() {
             completionHandler(errorString)
             return
         }
-
-        VZMacOSRestoreImage.load(from: URL.restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
+        
+        var restoreImageURL = URL.restoreImageURL
+        if let customRestoreImageURL = customRestoreImageURL {
+            restoreImageURL = customRestoreImageURL
+        }
+         
+        VZMacOSRestoreImage.load(from: restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
                 case .success(let restoreImage):
                     self.didLoad(restoreImage: restoreImage, completionHandler: completionHandler)
-                case .failure(_):
-                    completionHandler("Error: failure reading restore image")
+                case .failure(let failure):
+                    completionHandler("Error: Could not read restore image: \(failure)")
             }
         }
     }
 
-    func loadAndInstallRestoreImage(delegate: VZVirtualMachineDelegate, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander)  {
-        VZMacOSRestoreImage.load(from: URL.restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
+    func loadAndInstallRestoreImage(delegate: VZVirtualMachineDelegate, customRestoreImageURL: URL?, progressHandler: @escaping ProgressHandler, completionHandler: @escaping InstallCompletionHander)  {
+        var restoreImageURL = URL.restoreImageURL
+        if let customRestoreImageURL = customRestoreImageURL {
+            restoreImageURL = customRestoreImageURL
+        }
+
+        VZMacOSRestoreImage.load(from: restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
                 case .success(let restoreImage):
                     if let errorString = self.restore(from: restoreImage) {
                         completionHandler(errorString, nil)
                     } else if let virtualMachineConfiguration = self.virtualMachineConfiguration {
-                        self.startInstall(ipswURL: URL.restoreImageURL, virtualMacConfiguration: virtualMachineConfiguration, delegate: delegate, progressHandler: progressHandler, completionHandler: completionHandler)
+                        self.startInstall(ipswURL: restoreImageURL, virtualMacConfiguration: virtualMachineConfiguration, delegate: delegate, progressHandler: progressHandler, completionHandler: completionHandler)
                     } else {
                         completionHandler("Error: No virtual machine configuration found", nil)
                     }
@@ -124,19 +134,19 @@ final class VirtualMac: ObservableObject {
             try virtualMacConfiguration.validate()
             self.virtualMachineConfiguration = virtualMacConfiguration
         } catch (let error) {
-            debugLog("Error: \(error.localizedDescription)")
+            virtualOSApp.debugLog("Error: \(error.localizedDescription)")
             return nil
         }
 
         if let errorString = writeParametersToDisk() {
-            debugLog(errorString)
+            virtualOSApp.debugLog(errorString)
             return nil
         }
         
         let virtualMachine = VZVirtualMachine(configuration: virtualMacConfiguration, queue: .main)
         virtualMachine.delegate = delegate
 
-        debugLog("Using \(virtualMacConfiguration.cpuCount) cores, \(virtualMacConfiguration.memorySize.bytesToGigabytes()) GB RAM and screen size \(parameters.screenWidth)x\(parameters.screenHeight) px at \(parameters.pixelsPerInch) ppi")
+        virtualOSApp.debugLog("Using \(virtualMacConfiguration.cpuCount) cores, \(virtualMacConfiguration.memorySize.bytesToGigabytes()) GB RAM and screen size \(parameters.screenWidth)x\(parameters.screenHeight) px at \(parameters.pixelsPerInch) ppi")
         
         return virtualMachine
     }
@@ -144,10 +154,10 @@ final class VirtualMac: ObservableObject {
     func stop(virtualMachine: VZVirtualMachine, completionHandler: @escaping InstallCompletionHander) {
         virtualMachine.stop(completionHandler: { (error: Error?) in
             if let error = error {
-                debugLog("Error while stopping: \(error)")
+                virtualOSApp.debugLog("Error while stopping: \(error)")
                 completionHandler(error.localizedDescription, nil)
             } else {
-                debugLog("Stopped")
+                virtualOSApp.debugLog("Stopped")
                 completionHandler(nil, virtualMachine) // nil: no error
             }
         })
@@ -186,7 +196,7 @@ final class VirtualMac: ObservableObject {
     }
 
     fileprivate func fetchLatestSupportedRestoreImage(progressHandler: @escaping ProgressHandler, completionHandler: @escaping CompletionHander) {
-        debugLog("Attempting to download latest available restore image")
+        virtualOSApp.debugLog("Attempting to download latest available restore image")
         VZMacOSRestoreImage.fetchLatestSupported { [self](result: Result<VZMacOSRestoreImage, Error>) in
             switch result {
                 case let .failure(error):
@@ -232,7 +242,7 @@ final class VirtualMac: ObservableObject {
 
         virtualMachineConfiguration = VirtualMacConfiguration()
         virtualMachineConfiguration?.setDefault(parameters: &parameters)
-        debugLog("Parameters from restore image: \(parameters)")
+        virtualOSApp.debugLog("Parameters from restore image: \(parameters)")
 
         if let errorString = writeParametersToDisk() {
             completionHandler(errorString)
@@ -268,7 +278,7 @@ final class VirtualMac: ObservableObject {
     fileprivate func readSupportedConfiguration(from restoreImage: VZMacOSRestoreImage) -> (VZMacOSConfigurationRequirements?, String?) {
         let version = restoreImage.operatingSystemVersion
         versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) (Build \(restoreImage.buildVersion))"
-        debugLog("Restore image operating system version: \(versionString)")
+        virtualOSApp.debugLog("Restore image operating system version: \(versionString)")
 
         guard let mostFeaturefulSupportedConfiguration = restoreImage.mostFeaturefulSupportedConfiguration else {
             return (nil, "Error: Restore image for macOS version \(versionString) is not supported on this machine")
@@ -296,10 +306,11 @@ final class VirtualMac: ObservableObject {
             installer.install { result in
                 switch result {
                     case .success:
-                        debugLog("Install finished")
+                        virtualOSApp.debugLog("Install finished")
                         self.stop(virtualMachine: virtualMachine, completionHandler: completionHandler)
                     case .failure(let error):
-                        completionHandler("Error: Install failed: \(error)", nil)
+                        self.progressObserverCancellable?.cancel()
+                        completionHandler("Error: Install failed: \(error).\nPlease select `Delete Virtual Machine` and `Delete Restore Image` from the file menu or use a different restore image and try again.", nil)
                 }
             }
 
@@ -319,14 +330,14 @@ final class VirtualMac: ObservableObject {
         let bundleFileDescriptor = mkdir(URL.vmBundlePath, S_IRWXU | S_IRWXG | S_IRWXO)
         if bundleFileDescriptor == -1 {
             if errno == EEXIST {
-                return "Error: Failed to create VM bundle: the base directory already exists"
+                return "Failed to create VM bundle: the base directory already exists"
             }
-            return "Error: Failed to create VM bundle"
+            return "Failed to create VM bundle at \(URL.vmBundlePath) (error number \(errno))"
         }
 
         let result = close(bundleFileDescriptor)
         if result != 0 {
-            debugLog("Error: Failed to close VM bundle (\(result))")
+            virtualOSApp.debugLog("Failed to close VM bundle (\(result))")
         }
 
         return nil // no error

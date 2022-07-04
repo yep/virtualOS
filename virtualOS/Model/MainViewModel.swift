@@ -9,6 +9,7 @@
 
 import Foundation
 import Virtualization
+import OSLog
 
 final class MainViewModel: NSObject, ObservableObject {
     enum State: String {
@@ -20,21 +21,28 @@ final class MainViewModel: NSObject, ObservableObject {
         case Stopped
     }
 
-    @Published var virtualMac = VirtualMac()
-    @Published var virtualMachine: VZVirtualMachine?
     @Published var statusLabel = ""
     @Published var buttonLabel = ""
     @Published var buttonDisabled = false
     @Published var progress: Progress?
     @Published var showLicenseInformationModal = false
     @Published var showConfirmationAlert = false
+    @Published var showSettings = false
     @Published var licenseInformationTitleString = ""
     @Published var licenseInformationString = ""
     @Published var confirmationText = ""
     @Published var confirmationHandler: CompletionHander = {_ in}
+    @Published var virtualMac = VirtualMac()
+    @Published var virtualMachine: VZVirtualMachine?
+    @Published var customRestoreImageURL: URL?
+    @Published var diskSize = UserDefaults.standard.diskSize {
+        didSet {
+            UserDefaults.standard.diskSize = diskSize
+        }
+    }
     @Published var state = State.Stopped {
         didSet {
-            debugLog(self.state.rawValue)
+            virtualOSApp.debugLog(self.state.rawValue)
             updateLabels(for: self.state)
         }
     }
@@ -47,8 +55,12 @@ final class MainViewModel: NSObject, ObservableObject {
     static var restoreImageExists: Bool {
         return FileManager.default.fileExists(atPath: URL.restoreImageURL.path)
     }
-    var settingsShown: Bool {
+
+    var showConfigurationView: Bool {
         return (Self.diskImageExists || Self.restoreImageExists) && state == .Stopped
+    }
+    var showSettingsInfo: Bool {
+        return !Self.diskImageExists && state == .Stopped
     }
 
     override init() {
@@ -56,6 +68,7 @@ final class MainViewModel: NSObject, ObservableObject {
         updateLabels(for: state)
         readParametersFromDisk()
         loadLicenseInformationFromBundle()
+        moveFilesAfterUpdate()
     }
 
     func buttonPressed() {
@@ -101,9 +114,8 @@ final class MainViewModel: NSObject, ObservableObject {
     func loadLicenseInformationFromBundle() {
         if let filepath = Bundle.main.path(forResource: "LICENSE", ofType: "") {
             do {
-                licenseInformationString = "Restore image and virtual machine are stored at:\n\(NSHomeDirectory())\n\n–\n\n"
                 let contents = try String(contentsOfFile: filepath)
-                licenseInformationString += contents
+                licenseInformationString = contents
             } catch {
                 licenseInformationString = "Failed to load license information"
             }
@@ -128,7 +140,7 @@ final class MainViewModel: NSObject, ObservableObject {
                 display(errorString: errorString)
             }
         } else if Self.restoreImageExists {
-            virtualMac.loadParametersFromRestoreImage { (errorString: String?) in
+            virtualMac.loadParametersFromRestoreImage(customRestoreImageURL: nil) { (errorString: String?) in
                 if let errorString = errorString {
                     self.display(errorString: errorString)
                 }
@@ -137,10 +149,10 @@ final class MainViewModel: NSObject, ObservableObject {
     }
 
     fileprivate func start() {
-        debugLog("Using storage directory \(URL.vmBundlePath)")
+        virtualOSApp.debugLog("Using storage directory \(URL.vmBundlePath)")
         if FileManager.default.fileExists(atPath: URL.diskImageURL.path) {
             startFromDiskImage()
-        } else if FileManager.default.fileExists(atPath: URL.restoreImageURL.path) {
+        } else if FileManager.default.fileExists(atPath: URL.restoreImageURL.path) || customRestoreImageURL != nil {
             install(virtualMac: virtualMac)
         } else {
             downloadAndInstall()
@@ -152,14 +164,14 @@ final class MainViewModel: NSObject, ObservableObject {
         buttonLabel = "Stop"
 
         virtualMac.downloadRestoreImage { (progress: Progress) in
-            debugLog("Download progress: \(progress.fractionCompleted * 100)%")
+            virtualOSApp.debugLog("Download progress: \(progress.fractionCompleted * 100)%")
             self.progress = progress
             self.updateLabels(for: self.state)
         } completionHandler: { (errorString: String?) in
             if let errorString = errorString {
                 self.display(errorString: "Download of restore image failed: \(errorString)")
             } else {
-                debugLog("Download of restore image completed")
+                virtualOSApp.debugLog("Download of restore image completed")
                 self.install(virtualMac: self.virtualMac)
             }
         }
@@ -167,8 +179,8 @@ final class MainViewModel: NSObject, ObservableObject {
 
     fileprivate func install(virtualMac: VirtualMac) {
         state = .Installing
-        virtualMac.install(delegate: self) { (progress: Progress) in
-            debugLog("Install progress: \(progress.completedUnitCount)%")
+        virtualMac.install(delegate: self, customRestoreImageURL: customRestoreImageURL) { (progress: Progress) in
+            virtualOSApp.debugLog("Install progress: \(progress.completedUnitCount)%")
             self.progress = progress
             self.updateLabels(for: self.state)
         } completionHandler: { (errorString: String?, virtualMachine: VZVirtualMachine?) in
@@ -228,7 +240,7 @@ final class MainViewModel: NSObject, ObservableObject {
     }
 
     fileprivate func display(errorString: String) {
-        debugLog(errorString)
+        virtualOSApp.debugLog(errorString)
         
         let displayErrorString = {
             self.state = .Stopped
@@ -258,7 +270,7 @@ final class MainViewModel: NSObject, ObservableObject {
                 if let progress = progress {
                     statusLabel = "Installing macOS \(virtualMac.versionString): "
                     if progress.completedUnitCount == 0 {
-                        statusLabel = statusLabel + "Waiting for begin …"
+                        statusLabel = statusLabel + "Waiting for begin, this may take some time …"
                     } else {
                         statusLabel = statusLabel + "\(progress.completedUnitCount)%"
                     }
@@ -288,6 +300,16 @@ final class MainViewModel: NSObject, ObservableObject {
         }
         
         statusLabel = statusText
+    }
+    
+    fileprivate func moveFilesAfterUpdate() {
+        let oldRestoreImageLocation = URL(fileURLWithPath: NSHomeDirectory() + "/RestoreImage.ipsw")
+        let newRestoreImageLocation = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/RestoreImage.ipsw")
+        try? FileManager.default.moveItem(at: oldRestoreImageLocation, to: newRestoreImageLocation)
+
+        let oldVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/virtualOS.bundle")
+        let newVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/virtualOS.bundle")
+        try? FileManager.default.moveItem(at: oldVirtualMachineLocation, to: newVirtualMachineLocation)
     }
 }
 
