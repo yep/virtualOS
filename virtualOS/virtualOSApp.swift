@@ -44,38 +44,15 @@ struct virtualOSApp: App {
             })
 
             #else
+            
             Text("Sorry, virtualization requires an Apple Silicon computer.")
                 .frame(minWidth: 400, minHeight: 300)
-            #endif
+            
+            #endif // #if arch(arm64)
         }
-        #if arch(arm64)
         .commands {
-            CommandGroup(replacing: .appInfo) {
-                Button("About virtualOS") {
-                    viewModel.showLicenseInformationModal = !viewModel.showLicenseInformationModal
-                }
-            }
-            CommandGroup(replacing: .appSettings) {
-                Button("Settings") {
-                    viewModel.showSettings = !viewModel.showSettings
-                }.keyboardShortcut(",")
-            }
-            CommandGroup(replacing: .newItem) {}
-            CommandGroup(after: .newItem) {
-                Button("Delete Restore Image", action: {
-                    viewModel.deleteRestoreImage()
-                }).disabled(!MainViewModel.restoreImageExists)
-                Button("Delete Virtual Machine", action: {
-                    viewModel.deleteVirtualMachine()
-                })
-            }
-            CommandGroup(replacing: .appTermination) {
-                Button("Quit", action: {
-                    exit(1)
-                }).keyboardShortcut("Q")
-            }
+            MenuCommands(viewModel: viewModel)
         }
-        #endif
     }
     
     static func debugLog(_ message: String) {

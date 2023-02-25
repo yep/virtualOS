@@ -24,6 +24,7 @@
 		00989C9627E236A10048776B /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9427E236A10048776B /* MainView.swift */; };
 		00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9927E238930048776B /* VirtualMacConfiguration.swift */; };
 		00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */; };
+		0114C02629AA2416004159AF /* MenuCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0114C02529AA2416004159AF /* MenuCommands.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,7 @@
 		00989C9927E238930048776B /* VirtualMacConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMacConfiguration.swift; sourceTree = "<group>"; };
 		00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		00BA26AC2826DAF200E80B76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0114C02529AA2416004159AF /* MenuCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCommands.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,6 +183,7 @@
 				0005A77927E2809E0013BE83 /* VirtualMachineView.swift */,
 				006504E627F9D59300723BCA /* ConfigurationView.swift */,
 				00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */,
+				0114C02529AA2416004159AF /* MenuCommands.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -324,6 +327,7 @@
 				0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */,
 				00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */,
 				006504E727F9D59300723BCA /* ConfigurationView.swift in Sources */,
+				0114C02629AA2416004159AF /* MenuCommands.swift in Sources */,
 				00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */,
 				0090AF6127E25F6F0077D35F /* UInt64+Byte.swift in Sources */,
 				0044A65527F601E60007988A /* MainViewModel.swift in Sources */,
