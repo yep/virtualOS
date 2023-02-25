@@ -17,9 +17,15 @@ struct virtualOSApp: App {
     static let logger = Logger(subsystem: "com.github.yep.virtualOS", category: "main")
     
     #if arch(arm64)
-    @ObservedObject var viewModel = MainViewModel()
+    @StateObject var viewModel = MainViewModel()
+    @AppStorage("NSFullScreenMenuItemEverywhere") var fullScreenItemEverywhere = false
     #endif
 
+    init() {
+        fullScreenItemEverywhere = false
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+    
     var body: some Scene {
         WindowGroup {
             #if arch(arm64)

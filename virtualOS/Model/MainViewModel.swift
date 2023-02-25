@@ -22,15 +22,16 @@ final class MainViewModel: NSObject, ObservableObject {
     }
 
     @Published var statusLabel = ""
-    @Published var buttonLabel = ""
-    @Published var buttonDisabled = false
-    @Published var progress: Progress?
+    @Published var statusButtonLabel = ""
+    @Published var statusButtonDisabled = false
+    @Published var showStatusBar = true
     @Published var showLicenseInformationModal = false
     @Published var showConfirmationAlert = false
     @Published var showSettings = false
     @Published var licenseInformationTitleString = ""
     @Published var licenseInformationString = ""
     @Published var confirmationText = ""
+    @Published var progress: Progress?
     @Published var confirmationHandler: CompletionHander = {_ in}
     @Published var virtualMac = VirtualMac()
     @Published var virtualMachine: VZVirtualMachine?
@@ -161,7 +162,7 @@ final class MainViewModel: NSObject, ObservableObject {
 
     fileprivate func downloadAndInstall() {
         state = .Downloading
-        buttonLabel = "Stop"
+        statusButtonLabel = "Stop"
 
         virtualMac.downloadRestoreImage { (progress: Progress) in
             virtualOSApp.debugLog("Download progress: \(progress.fractionCompleted * 100)%")
@@ -260,12 +261,12 @@ final class MainViewModel: NSObject, ObservableObject {
         switch state {
             case .Stopped:
                 statusLabel = state.rawValue
-                buttonLabel = "Start"
+                statusButtonLabel = "Start"
             case .Downloading:
                 if let progress = progress {
                     updateDownloadProgress(progress)
                 }
-                buttonLabel = "Stop"
+                statusButtonLabel = "Stop"
             case .Installing:
                 if let progress = progress {
                     statusLabel = "Installing macOS \(virtualMac.versionString): "
@@ -275,16 +276,16 @@ final class MainViewModel: NSObject, ObservableObject {
                         statusLabel = statusLabel + "\(progress.completedUnitCount)%"
                     }
                 }
-                buttonLabel = "Stop"
+                statusButtonLabel = "Stop"
             case .Starting, .Running, .Stopping:
                 statusLabel = state.rawValue
-                buttonLabel = "Stop"
+                statusButtonLabel = "Stop"
         }
 
         if state == .Installing {
-            buttonDisabled = true // installing can not be canceled
+            statusButtonDisabled = true // installing can not be canceled
         } else {
-            buttonDisabled = false
+            statusButtonDisabled = false
         }
     }
     

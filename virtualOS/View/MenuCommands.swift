@@ -25,12 +25,24 @@ struct MenuCommands: Commands {
         }
         CommandGroup(replacing: .newItem) {}
         CommandGroup(after: .newItem) {
-            Button("Delete Restore Image", action: {
+            Button("Delete Restore Image") {
                 viewModel.deleteRestoreImage()
-            }).disabled(!MainViewModel.restoreImageExists)
+            }.disabled(!MainViewModel.restoreImageExists)
             Button("Delete Virtual Machine", action: {
                 viewModel.deleteVirtualMachine()
             })
+        }
+        CommandGroup(replacing: .toolbar) {
+            let statusBarVisibilityString = viewModel.showStatusBar ? "Hide" : "Show"
+            Button(String(format: "%@ Status Bar", statusBarVisibilityString)) {
+                viewModel.showStatusBar = !viewModel.showStatusBar
+            }.keyboardShortcut("B")
+            Divider()
+            Button("Enter Full Screen") {
+                if let window = NSApplication.shared.windows.first {
+                    window.toggleFullScreen(nil)
+                }
+            }.keyboardShortcut("F", modifiers: [.command, .option])
         }
     }
     

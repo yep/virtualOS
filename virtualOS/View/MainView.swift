@@ -15,15 +15,18 @@ struct MainView: View {
     var body: some View {
         VStack {
             Spacer()
-            HStack {
-                Text(viewModel.statusLabel)
-                Spacer()
-                Button {
-                    viewModel.buttonPressed()
-                } label: {
-                    Text(viewModel.buttonLabel)
-                }.disabled(viewModel.buttonDisabled)
-            }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+            if viewModel.showStatusBar {
+                HStack {
+                    Text(viewModel.statusLabel)
+                    Spacer()
+                    Button {
+                        viewModel.buttonPressed()
+                    } label: {
+                        Text(viewModel.statusButtonLabel)
+                    }.disabled(viewModel.statusButtonDisabled)
+                }
+                .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+            }
 
             if viewModel.showConfigurationView {
                 ConfigurationView(viewModel: viewModel)
