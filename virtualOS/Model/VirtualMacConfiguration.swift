@@ -118,11 +118,15 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
 
     fileprivate func configureGraphicsDevice(parameters: VirtualMac.Parameters) {
         let graphicsDevice = VZMacGraphicsDeviceConfiguration()
-        graphicsDevice.displays = [VZMacGraphicsDisplayConfiguration(
-            widthInPixels: parameters.screenWidth,
-            heightInPixels: parameters.screenHeight,
-            pixelsPerInch: parameters.pixelsPerInch
-        )]
+        if parameters.useMainScreenSize, let mainScreen = NSScreen.main {
+            graphicsDevice.displays = [VZMacGraphicsDisplayConfiguration(for: mainScreen, sizeInPoints: NSSize(width: parameters.screenWidth, height: parameters.screenHeight))]
+        } else {
+            graphicsDevice.displays = [VZMacGraphicsDisplayConfiguration(
+                widthInPixels: parameters.screenWidth,
+                heightInPixels: parameters.screenHeight,
+                pixelsPerInch: parameters.pixelsPerInch
+            )]
+        }
         graphicsDevices = [graphicsDevice]
     }
 

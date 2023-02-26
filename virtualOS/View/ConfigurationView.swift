@@ -32,6 +32,8 @@ struct ConfigurationView: View {
             viewModel.virtualMac.parameters.screenHeight = Int(screenHeightValue)
         }
     }
+    @State fileprivate var useCustomScreenSize = true
+    @State fileprivate var useMainScreenSize = false
 
     var body: some View {
         VStack {
@@ -57,6 +59,22 @@ struct ConfigurationView: View {
                     Text("RAM: \(viewModel.virtualMac.parameters.memorySizeInGB) GB")
                         .frame(minWidth: sliderTextWidth, alignment: .leading)
                 }
+                 
+                HStack() {
+                    Text("Screen Size:")
+                    Spacer()
+                    Toggle("Custom", isOn: $useCustomScreenSize).onChange(of: useCustomScreenSize) { newValue in
+                        useMainScreenSize = !newValue
+                    }
+                    Toggle("Main Screen", isOn: $useMainScreenSize).onChange(of: useMainScreenSize) { newValue in
+                        useCustomScreenSize = !newValue
+                        viewModel.virtualMac.parameters.useMainScreenSize = newValue
+                        if let mainScreen = NSScreen.main {
+                            screenWidthValue  = Float(mainScreen.frame.width)
+                            screenHeightValue = Float(mainScreen.frame.height)
+                        }
+                    }
+                }
 
                 Slider(value: Binding(get: {
                     screenWidthValue
@@ -65,7 +83,7 @@ struct ConfigurationView: View {
                 }), in: 800 ... Float(NSScreen.main?.frame.width ?? CGFloat(parameters.screenWidth)), step: 100) {
                     Text("Screen Width: \(viewModel.virtualMac.parameters.screenWidth) px")
                         .frame(minWidth: sliderTextWidth, alignment: .leading)
-                }
+                }.disabled(useMainScreenSize)
 
                 Slider(value: Binding(get: {
                     screenHeightValue
@@ -74,11 +92,11 @@ struct ConfigurationView: View {
                 }), in: 600 ... Float(NSScreen.main?.frame.height ?? CGFloat(parameters.screenHeight)), step: 50) {
                     Text("Screen Height: \(viewModel.virtualMac.parameters.screenHeight) px")
                         .frame(minWidth: sliderTextWidth, alignment: .leading)
-                }
+                }.disabled(useMainScreenSize)
             }
             .padding()
             .overlay {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 5)
                 .stroke(.tertiary, lineWidth: 1)
             }
 
@@ -90,6 +108,7 @@ struct ConfigurationView: View {
             let parameters = viewModel.virtualMac.parameters
             cpuCountSliderValue     = Float(parameters.cpuCount)
             memorySliderValue       = Float(parameters.memorySizeInGB)
+            useMainScreenSize          = parameters.useMainScreenSize
             screenWidthValue        = Float(parameters.screenWidth)
             screenHeightValue       = Float(parameters.screenHeight)
         }

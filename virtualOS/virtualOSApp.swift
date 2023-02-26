@@ -18,11 +18,13 @@ struct virtualOSApp: App {
     
     #if arch(arm64)
     @StateObject var viewModel = MainViewModel()
-    @AppStorage("NSFullScreenMenuItemEverywhere") var fullScreenItemEverywhere = false
     #endif
 
+    @AppStorage("NSFullScreenMenuItemEverywhere") var fullScreenMenuItemEverywhere = false
+    @NSApplicationDelegateAdaptor(ApplicationDelegate.self) var applicationDelegate
+
     init() {
-        fullScreenItemEverywhere = false
+        fullScreenMenuItemEverywhere = false
         NSWindow.allowsAutomaticWindowTabbing = false
     }
     
@@ -57,7 +59,9 @@ struct virtualOSApp: App {
             #endif // #if arch(arm64)
         }
         .commands {
+            #if arch(arm64)
             MenuCommands(viewModel: viewModel)
+            #endif
         }
     }
     

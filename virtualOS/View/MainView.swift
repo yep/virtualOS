@@ -14,13 +14,13 @@ struct MainView: View {
 
     var body: some View {
         VStack {
-            Spacer()
             if viewModel.showStatusBar {
+                Spacer()
                 HStack {
                     Text(viewModel.statusLabel)
                     Spacer()
                     Button {
-                        viewModel.buttonPressed()
+                        viewModel.statusButtonPressed()
                     } label: {
                         Text(viewModel.statusButtonLabel)
                     }.disabled(viewModel.statusButtonDisabled)

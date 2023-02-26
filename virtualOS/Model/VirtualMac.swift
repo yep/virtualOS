@@ -12,6 +12,23 @@ import Combine
 
 final class VirtualMac: ObservableObject {
     struct Parameters: Codable {
+        init() {}
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            cpuCount          = try container.decode(Int.self, forKey: .cpuCount)
+            cpuCountMin       = try container.decode(Int.self, forKey: .cpuCountMin)
+            cpuCountMax       = try container.decode(Int.self, forKey: .cpuCountMax)
+            diskSizeInGB      = try container.decode(UInt64.self, forKey: .diskSizeInGB)
+            memorySizeInGB    = try container.decode(UInt64.self, forKey: .memorySizeInGB)
+            memorySizeInGBMin = try container.decode(UInt64.self, forKey: .memorySizeInGBMin)
+            memorySizeInGBMax = try container.decode(UInt64.self, forKey: .memorySizeInGBMax)
+            useMainScreenSize = try container.decodeIfPresent(Bool.self, forKey: .useMainScreenSize) ?? false // optional
+            screenWidth       = try container.decode(Int.self, forKey: .screenWidth)
+            screenHeight      = try container.decode(Int.self, forKey: .screenHeight)
+            pixelsPerInch     = try container.decode(Int.self, forKey: .pixelsPerInch)
+            microphoneEnabled = try container.decode(Bool.self, forKey: .microphoneEnabled)
+        }
+        
         var cpuCount = 1
         var cpuCountMin = 1
         var cpuCountMax = 2
@@ -19,6 +36,7 @@ final class VirtualMac: ObservableObject {
         var memorySizeInGB: UInt64 = 1
         var memorySizeInGBMin: UInt64 = 1
         var memorySizeInGBMax: UInt64 = 2
+        var useMainScreenSize = false
         var screenWidth = 1500
         var screenHeight = 900
         var pixelsPerInch = 250

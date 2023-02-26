@@ -7,10 +7,10 @@
 
 import SwiftUI
 
+#if arch(arm64)
+
 struct MenuCommands: Commands {
     @ObservedObject var viewModel: MainViewModel
-
-    #if arch(arm64)
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
@@ -23,8 +23,11 @@ struct MenuCommands: Commands {
                 viewModel.showSettings = !viewModel.showSettings
             }.keyboardShortcut(",")
         }
-        CommandGroup(replacing: .newItem) {}
-        CommandGroup(after: .newItem) {
+        CommandGroup(replacing: .newItem) {
+            Button(viewModel.statusButtonLabel) {
+                viewModel.statusButtonPressed()
+            }.keyboardShortcut("R")
+            Divider()
             Button("Delete Restore Image") {
                 viewModel.deleteRestoreImage()
             }.disabled(!MainViewModel.restoreImageExists)
@@ -38,14 +41,15 @@ struct MenuCommands: Commands {
                 viewModel.showStatusBar = !viewModel.showStatusBar
             }.keyboardShortcut("B")
             Divider()
-            Button("Enter Full Screen") {
+            Button(String(format: "%@ Full Screen", viewModel.isFullScreen ? "Exit" : "Enter")) {
                 if let window = NSApplication.shared.windows.first {
+                    viewModel.isFullScreen = !viewModel.isFullScreen
+                    viewModel.showStatusBar = !viewModel.isFullScreen
                     window.toggleFullScreen(nil)
                 }
-            }.keyboardShortcut("F", modifiers: [.command, .option])
+            }.keyboardShortcut("F")
         }
-    }
-    
-    #endif // #if arch(arm64)
+    }    
 }
 
+#endif // #if arch(arm64)

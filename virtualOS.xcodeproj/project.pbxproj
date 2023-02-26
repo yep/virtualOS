@@ -25,6 +25,7 @@
 		00989C9A27E238930048776B /* VirtualMacConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00989C9927E238930048776B /* VirtualMacConfiguration.swift */; };
 		00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */; };
 		0114C02629AA2416004159AF /* MenuCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0114C02529AA2416004159AF /* MenuCommands.swift */; };
+		01FCAD8429AB707C00F12689 /* ApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FCAD8329AB707C00F12689 /* ApplicationDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,7 @@
 		00A4FFE7283E3D6F004DD9B3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		00BA26AC2826DAF200E80B76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0114C02529AA2416004159AF /* MenuCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCommands.swift; sourceTree = "<group>"; };
+		01FCAD8329AB707C00F12689 /* ApplicationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -169,6 +171,7 @@
 		00989C9127E236A10048776B /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				01FCAD8329AB707C00F12689 /* ApplicationDelegate.swift */,
 				0044A65427F601E60007988A /* MainViewModel.swift */,
 				007987B027E24A8400960D74 /* VirtualMac.swift */,
 				00989C9927E238930048776B /* VirtualMacConfiguration.swift */,
@@ -323,6 +326,7 @@
 				00989C9627E236A10048776B /* MainView.swift in Sources */,
 				0005A77A27E2809E0013BE83 /* VirtualMachineView.swift in Sources */,
 				00989C6427E2340C0048776B /* virtualOSApp.swift in Sources */,
+				01FCAD8429AB707C00F12689 /* ApplicationDelegate.swift in Sources */,
 				007987B127E24A8400960D74 /* VirtualMac.swift in Sources */,
 				0044A65A27F76BD30007988A /* URL+Paths.swift in Sources */,
 				00A4FFE8283E3D6F004DD9B3 /* SettingsView.swift in Sources */,
@@ -492,7 +496,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
@@ -507,7 +511,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -525,7 +529,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"virtualOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
@@ -540,7 +544,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.yep.ios.virtualOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

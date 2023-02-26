@@ -28,6 +28,8 @@ final class MainViewModel: NSObject, ObservableObject {
     @Published var showLicenseInformationModal = false
     @Published var showConfirmationAlert = false
     @Published var showSettings = false
+    @Published var isFullScreen = false
+    @Published var useMainScreenSize = true
     @Published var licenseInformationTitleString = ""
     @Published var licenseInformationString = ""
     @Published var confirmationText = ""
@@ -72,7 +74,7 @@ final class MainViewModel: NSObject, ObservableObject {
         moveFilesAfterUpdate()
     }
 
-    func buttonPressed() {
+    func statusButtonPressed() {
         switch state {
             case .Stopped:
                 start()
