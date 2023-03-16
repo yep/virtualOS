@@ -72,6 +72,11 @@ final class MainViewModel: NSObject, ObservableObject {
         readParametersFromDisk()
         loadLicenseInformationFromBundle()
         moveFilesAfterUpdate()
+        for arg in CommandLine.arguments {
+            if (arg == "start") {
+                start()
+            }
+        }
     }
 
     func statusButtonPressed() {
