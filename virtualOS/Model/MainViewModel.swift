@@ -72,11 +72,7 @@ final class MainViewModel: NSObject, ObservableObject {
         readParametersFromDisk()
         loadLicenseInformationFromBundle()
         moveFilesAfterUpdate()
-        for arg in CommandLine.arguments {
-            if (arg == "start") {
-                start()
-            }
-        }
+        handleCommandLineArguments()
     }
 
     func statusButtonPressed() {
@@ -318,6 +314,12 @@ final class MainViewModel: NSObject, ObservableObject {
         let oldVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/virtualOS.bundle")
         let newVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/virtualOS.bundle")
         try? FileManager.default.moveItem(at: oldVirtualMachineLocation, to: newVirtualMachineLocation)
+    }
+    
+    fileprivate func handleCommandLineArguments() {
+        for arg in CommandLine.arguments where arg == "start" {
+            start()
+        }
     }
 }
 
