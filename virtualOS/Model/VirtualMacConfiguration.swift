@@ -57,7 +57,7 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         configureAudioDevice(parameters: parameters)
         configureGraphicsDevice(parameters: parameters)
         configureStorageDevice(parameters: parameters)
-        configureNetworkDevices()
+        configureNetworkDevices(parameters: parameters)
     }
 
     // MARK: - Private
@@ -89,10 +89,11 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         return true // success
     }
 
-    fileprivate func configureNetworkDevices() {
+    fileprivate func configureNetworkDevices(parameters: VirtualMac.Parameters) {
         let networkDevice = VZVirtioNetworkDeviceConfiguration()
         let networkAttachment = VZNATNetworkDeviceAttachment()
         networkDevice.attachment = networkAttachment
+        networkDevice.macAddress = VZMACAddress(string: parameters.macAddress) ?? .randomLocallyAdministered()
         networkDevices = [networkDevice]
     }
 
