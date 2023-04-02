@@ -27,6 +27,7 @@ final class VirtualMac: ObservableObject {
             screenHeight      = try container.decode(Int.self, forKey: .screenHeight)
             pixelsPerInch     = try container.decode(Int.self, forKey: .pixelsPerInch)
             microphoneEnabled = try container.decode(Bool.self, forKey: .microphoneEnabled)
+            macAddress        = try container.decodeIfPresent(String.self, forKey: .macAddress) ?? VZMACAddress.randomLocallyAdministered().string // optional
         }
         
         var cpuCount = 1
@@ -41,6 +42,7 @@ final class VirtualMac: ObservableObject {
         var screenHeight = 900
         var pixelsPerInch = 250
         var microphoneEnabled = false
+        var macAddress = VZMACAddress.randomLocallyAdministered().string
     }
 
     typealias InstallCompletionHander = (String?, VZVirtualMachine?) -> Void    
