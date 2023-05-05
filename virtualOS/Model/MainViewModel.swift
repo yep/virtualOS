@@ -38,6 +38,7 @@ final class MainViewModel: NSObject, ObservableObject {
     @Published var virtualMac = VirtualMac()
     @Published var virtualMachine: VZVirtualMachine?
     @Published var customRestoreImageURL: URL?
+    @Published var customHardDiskURL: URL?
     @Published var diskSize = UserDefaults.standard.diskSize {
         didSet {
             UserDefaults.standard.diskSize = diskSize
@@ -58,20 +59,31 @@ final class MainViewModel: NSObject, ObservableObject {
     static var restoreImageExists: Bool {
         return FileManager.default.fileExists(atPath: URL.restoreImageURL.path)
     }
-
+    var sharedFolderExists: Bool {
+        if let hardDiskDirectoryBookmarkData = Bookmark.startAccess(data: virtualMac.parameters.sharedFolder, forType: .hardDisk) {
+            var isDirectory = ObjCBool(false)
+            if FileManager.default.fileExists(atPath: hardDiskDirectoryBookmarkData.path, isDirectory: &isDirectory),
+               isDirectory.boolValue == true
+            {
+                return true
+            }
+        }
+        return false
+    }
     var showConfigurationView: Bool {
         return (Self.diskImageExists || Self.restoreImageExists) && state == .Stopped
     }
     var showSettingsInfo: Bool {
         return !Self.diskImageExists && state == .Stopped
     }
+    
+    // MARK: - Public
 
     override init() {
         super.init()
         updateLabels(for: state)
         readParametersFromDisk()
         loadLicenseInformationFromBundle()
-        moveFilesAfterUpdate()
         handleCommandLineArguments()
     }
 
@@ -126,7 +138,7 @@ final class MainViewModel: NSObject, ObservableObject {
         } else {
             licenseInformationString = "License information not found"
         }
-
+        
         licenseInformationTitleString = "virtualOS"
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
@@ -134,10 +146,25 @@ final class MainViewModel: NSObject, ObservableObject {
             licenseInformationTitleString += " \(version) (Build \(build))"
         }
     }
+    
+    func set(sharedFolderUrl: URL) {
+        if let sharedFolderData = Bookmark.createBookmarkData(fromUrl: sharedFolderUrl) {
+            _ = Bookmark.startAccess(data: sharedFolderData, forType: .sharedFolder)
+            virtualMac.parameters.sharedFolder = sharedFolderData
+            objectWillChange.send()
+            if let errorString = virtualMac.writeParametersToDisk() {
+                display(errorString: errorString)
+            }
+        }
+    }
 
     // MARK: - Private
 
     fileprivate func readParametersFromDisk() {
+        if let hardDiskDirectoryBookmarkData = UserDefaults.standard.hardDiskDirectoryBookmarkData {
+            _ = Bookmark.startAccess(data: hardDiskDirectoryBookmarkData, forType: .hardDisk)
+        }
+
         if Self.diskImageExists {
             // read previous vm settings
             if let errorString = virtualMac.readFromDisk(delegate: self) {
@@ -176,7 +203,9 @@ final class MainViewModel: NSObject, ObservableObject {
                 self.display(errorString: "Download of restore image failed: \(errorString)")
             } else {
                 virtualOSApp.debugLog("Download of restore image completed")
-                self.install(virtualMac: self.virtualMac)
+                DispatchQueue.main.async {
+                    self.install(virtualMac: self.virtualMac)
+                }
             }
         }
     }
@@ -304,16 +333,6 @@ final class MainViewModel: NSObject, ObservableObject {
         }
         
         statusLabel = statusText
-    }
-    
-    fileprivate func moveFilesAfterUpdate() {
-        let oldRestoreImageLocation = URL(fileURLWithPath: NSHomeDirectory() + "/RestoreImage.ipsw")
-        let newRestoreImageLocation = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/RestoreImage.ipsw")
-        try? FileManager.default.moveItem(at: oldRestoreImageLocation, to: newRestoreImageLocation)
-
-        let oldVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/virtualOS.bundle")
-        let newVirtualMachineLocation = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/virtualOS.bundle")
-        try? FileManager.default.moveItem(at: oldVirtualMachineLocation, to: newVirtualMachineLocation)
     }
     
     fileprivate func handleCommandLineArguments() {

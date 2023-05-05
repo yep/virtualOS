@@ -27,6 +27,7 @@ final class VirtualMac: ObservableObject {
             screenHeight      = try container.decode(Int.self, forKey: .screenHeight)
             pixelsPerInch     = try container.decode(Int.self, forKey: .pixelsPerInch)
             microphoneEnabled = try container.decode(Bool.self, forKey: .microphoneEnabled)
+            sharedFolder      = try container.decodeIfPresent(Data.self, forKey: .sharedFolder) ?? nil // optional
             macAddress        = try container.decodeIfPresent(String.self, forKey: .macAddress) ?? VZMACAddress.randomLocallyAdministered().string // optional
         }
         
@@ -42,6 +43,7 @@ final class VirtualMac: ObservableObject {
         var screenHeight = 900
         var pixelsPerInch = 250
         var microphoneEnabled = false
+        var sharedFolder: Data?
         var macAddress = VZMACAddress.randomLocallyAdministered().string
     }
 
@@ -166,7 +168,7 @@ final class VirtualMac: ObservableObject {
         let virtualMachine = VZVirtualMachine(configuration: virtualMacConfiguration, queue: .main)
         virtualMachine.delegate = delegate
 
-        virtualOSApp.debugLog("Using \(virtualMacConfiguration.cpuCount) cores, \(virtualMacConfiguration.memorySize.bytesToGigabytes()) GB RAM and screen size \(parameters.screenWidth)x\(parameters.screenHeight) px at \(parameters.pixelsPerInch) ppi")
+        virtualOSApp.debugLog("Using \(virtualMacConfiguration.cpuCount) cores, \(virtualMacConfiguration.memorySize.bytesToGigabytes()) GB RAM, screen size \(parameters.screenWidth)x\(parameters.screenHeight) px at \(parameters.pixelsPerInch) ppi, shared folder: \(Bookmark.startAccess(data: parameters.sharedFolder, forType: .sharedFolder)?.absoluteString ?? "none")")
         
         return virtualMachine
     }

@@ -58,6 +58,9 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         configureGraphicsDevice(parameters: parameters)
         configureStorageDevice(parameters: parameters)
         configureNetworkDevices(parameters: parameters)
+        if #available(macOS 13.0, *) {
+            configureSharedFolder(parameters: parameters)
+        }
     }
 
     // MARK: - Private
@@ -138,6 +141,20 @@ final class VirtualMacConfiguration: VZVirtualMachineConfiguration {
         } else {
             virtualOSApp.debugLog("Error: could not create storage device")
         }
+    }
+    
+    @available(macOS 13.0, *)
+    fileprivate func configureSharedFolder(parameters: VirtualMac.Parameters) {        
+        guard let hardDiskDirectoryBookmarkData = Bookmark.startAccess(data: parameters.sharedFolder, forType: .hardDisk) else {
+            return
+        }
+
+        let sharedDirectory = VZSharedDirectory(url: hardDiskDirectoryBookmarkData, readOnly: false)
+        let singleDirectoryShare = VZSingleDirectoryShare(directory: sharedDirectory)
+        let sharingConfiguration = VZVirtioFileSystemDeviceConfiguration(tag: VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag)
+        sharingConfiguration.share = singleDirectoryShare
+
+        directorySharingDevices = [sharingConfiguration]
     }
 
     fileprivate func computeCPUCount() -> Int {
