@@ -19,7 +19,7 @@ struct ConfigurationView: View {
         case custom = 2
     }
 
-    @ObservedObject var viewModel: MainViewModel
+    @ObservedObject var viewModel: ViewModel
     @State fileprivate var cpuCountSliderValue: Float = 0 {
         didSet {
             viewModel.virtualMac.parameters.cpuCount = Int(cpuCountSliderValue)
@@ -125,7 +125,7 @@ struct ConfigurationView: View {
                     Text("Shared Folder").frame(minWidth: textWidth, alignment: .leading)
                     VStack(alignment: .leading, content: {
                         Picker("", selection: $sharedFolderType) {
-                            Text("None").tag(SharedFolderType.none)
+                            Text("No shared folder").tag(SharedFolderType.none)
                             Text("Custom").tag(SharedFolderType.custom)
                         }.pickerStyle(.inline)
                         Button("Select Shared Folder") {
@@ -194,7 +194,7 @@ struct ConfigurationView: View {
 struct ConfigurationViewProvider_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            ConfigurationView(viewModel: MainViewModel())
+            ConfigurationView(viewModel: ViewModel())
         }
     }
 }

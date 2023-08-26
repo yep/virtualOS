@@ -9,49 +9,59 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 struct SettingsView: View {
-    @ObservedObject var viewModel: MainViewModel
-    
-    enum HardDiskLocation: String, CaseIterable, Identifiable {
+    fileprivate enum HardDiskLocation: String, CaseIterable, Identifiable {
         case sandbox = "Sandbox"
-        case custom = "Select location where VM hard disk images will be stored."
+        case custom = "Select location where VM hard disk image will be stored."
         var id: Self { self }
     }
-    enum RestoreImageType: String, CaseIterable, Identifiable {
+    fileprivate enum RestoreImageType: String, CaseIterable, Identifiable {
         case latest = "Downloads latest restore image from Apple."
-        case custom = "Select custom restore image (.ipsw)\nFor example, download from [https://ipsw.me](https://ipsw.me/product/Mac)"
+        case custom = "Select custom restore image (.ipsw)\nFor example, download from https://ipsw.me/product/mac"
         var id: Self { self }
     }
+    fileprivate struct SizeConstants {
+        static let totalWidth    = CGFloat(470)
+        static let infoWidth     = CGFloat(300)
+        static let diskWidth     = CGFloat(140)
+        static let locationWidth = CGFloat(450)
+        static let minTextHeight = CGFloat(28)
+    }
     
-    @State var diskSize = String(UserDefaults.standard.diskSize)
-    @State var hardDisk = HardDiskLocation.sandbox
-    @State var restoreImageType = RestoreImageType.latest
-    
-    var hardDiskLocationInfo: String {
-        if let customHardDiskURL = viewModel.customHardDiskURL {
-            return "Using \(customHardDiskURL.path)"
-        } else if hardDisk == .sandbox {
+    @ObservedObject var viewModel: ViewModel
+    @State fileprivate var diskSize = String(UserDefaults.standard.diskSize)
+    @State fileprivate var hardDiskLocation = HardDiskLocation.sandbox
+    @State fileprivate var restoreImageType = RestoreImageType.latest
+    @State fileprivate var showAlert = false
+
+    fileprivate var hardDiskLocationString: String {
+        if hardDiskLocation == .sandbox {
             return URL.basePath
         } else {
-            return HardDiskLocation.custom.rawValue
+            if let customHardDiskURL = viewModel.customHardDiskURL {
+                return customHardDiskURL.path
+            } else {
+                return HardDiskLocation.custom.rawValue
+            }
         }
     }
-    var restoreImageInfo: String {
+    fileprivate var restoreImageInfoString: String {
         if let restoreImageURL = viewModel.customRestoreImageURL {
-            return "Using \(restoreImageURL.path)"
+            return restoreImageURL.path
         } else {
             return restoreImageType.rawValue
         }
     }
     
     var body: some View {
-        VStack {
-            Text("Settings")
+        VStack() {
+            Text("Settings").font(.headline)
             Form {
                 HStack {
                     TextField("Hard Disk Size:", text: $diskSize)
-                        .frame(maxWidth: 130)
+                        .frame(maxWidth: SizeConstants.diskWidth)
                         .onChange(of: diskSize) { newValue in
                             if let newDiskSize = Int(diskSize) {
                                 viewModel.diskSize = newDiskSize
@@ -62,72 +72,70 @@ struct SettingsView: View {
                     Text("(in GB)")
                 }
                 
-                Picker("Hard Disk Location:", selection: $hardDisk) {
+                Picker("Hard Disk Location:", selection: $hardDiskLocation) {
                     Text("Default").tag(HardDiskLocation.sandbox)
                     Text("Custom").tag(HardDiskLocation.custom)
                 }
                 .pickerStyle(.inline)
-                .onChange(of: hardDisk) { newValue in
+                .onChange(of: hardDiskLocation) { newValue in
                     if newValue == .sandbox {
                         UserDefaults.standard.hardDiskDirectoryBookmarkData = nil
                     }
                 }
-
+                
                 HStack {
+                    Button("Show in Finder") {
+                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: hardDiskLocationString)
+                    }.disabled(hardDiskLocation != .sandbox && viewModel.customHardDiskURL == nil)
+                    
                     Button("Select Hard Disk Location") {
                         selectCustomHardDiskLocation()
-                    }.disabled(hardDisk == .sandbox)
+                    }.disabled(hardDiskLocation == .sandbox)
                 }
 
-                Text(.init("hardDiskLocationInfo"))
+                Text(.init(hardDiskLocationString))
                     .font(.caption)
-                    .frame(maxWidth: 270, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: SizeConstants.infoWidth, minHeight: SizeConstants.minTextHeight, alignment: .topLeading)
                     .lineLimit(nil)
-                    .disabled(hardDisk == .sandbox)
+                    .disabled(hardDiskLocation == .sandbox)
                 
+
                 Picker("Restore Image:", selection: $restoreImageType) {
                     Text("Latest").tag(RestoreImageType.latest)
                     Text("Custom").tag(RestoreImageType.custom)
                 }.pickerStyle(.inline)
+                
                 Button("Select Restore Image") {
                     selectRestoreImage()
                 }.disabled(restoreImageType == .latest)
-                Text(restoreImageInfo)
+                
+                Text(restoreImageInfoString)
                     .font(.caption)
-                    .frame(maxWidth: 270, alignment: .leading)
+                    .frame(maxWidth: SizeConstants.infoWidth, minHeight: SizeConstants.minTextHeight, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(nil)
                     .disabled(restoreImageType == .latest)
             }.padding(.bottom)
-
-            Text("To open the hard disk location directory:\nIn Finder, in the 'Go' menu, select 'Go to Folder' and enter the path shown above.")
-                .frame(maxWidth: 370, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .lineLimit(nil)
-                .padding(.bottom)
-                .textSelection(.enabled)
-                .font(.caption)
-
+                        
             Button("OK") {
                 viewModel.showSettings = !viewModel.showSettings
             }.keyboardShortcut(.defaultAction)
         }
         .padding()
-        .frame(minWidth: 420)
+        .frame(minWidth: SizeConstants.totalWidth, maxWidth: SizeConstants.totalWidth)
         .onAppear() {
             diskSize = String(viewModel.diskSize)
             if let hardDiskDirectoryBookmarkData = UserDefaults.standard.hardDiskDirectoryBookmarkData,
                let hardDiskURL = Bookmark.startAccess(data: hardDiskDirectoryBookmarkData, forType: .hardDisk)
             {
-                hardDisk = .custom
+                hardDiskLocation = .custom
                 viewModel.customHardDiskURL = hardDiskURL
             }
         }
     }
-
+    
     // MARK: - Private
-
+    
     fileprivate func selectCustomHardDiskLocation() {
         let openPanel = NSOpenPanel()
         openPanel.directoryURL = URL(fileURLWithPath: URL.basePath, isDirectory: true)
@@ -144,7 +152,7 @@ struct SettingsView: View {
             UserDefaults.standard.hardDiskDirectoryBookmarkData = hardDiskDirectoryBookmarkData
         }
     }
-
+    
     fileprivate func selectRestoreImage() {
         guard let ipswContentType = UTType(filenameExtension: "ipsw") else {
             return
@@ -159,13 +167,12 @@ struct SettingsView: View {
             viewModel.customRestoreImageURL = selectedURL
         }
     }
-
 }
 
 struct SettingsViewProvider_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            SettingsView(viewModel: MainViewModel())
+            SettingsView(viewModel: ViewModel())
         }
     }
 }

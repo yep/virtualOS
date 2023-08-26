@@ -1,5 +1,5 @@
 //
-//  MainViewModel.swift
+//  ViewModel.swift
 //  virtualOS
 //
 //  Created by Jahn Bertsch on 31.03.22.
@@ -11,7 +11,7 @@ import Foundation
 import Virtualization
 import OSLog
 
-final class MainViewModel: NSObject, ObservableObject {
+final class ViewModel: NSObject, ObservableObject {
     enum State: String {
         case Downloading
         case Installing
@@ -342,7 +342,7 @@ final class MainViewModel: NSObject, ObservableObject {
     }
 }
 
-extension MainViewModel: VZVirtualMachineDelegate {
+extension ViewModel: VZVirtualMachineDelegate {
     func guestDidStop(_ vm: VZVirtualMachine) {
         state = .Stopped
     }

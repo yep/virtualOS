@@ -35,15 +35,9 @@ struct Bookmark {
                 previousURL.stopAccessingSecurityScopedResource()
             }
             
-            if accessedURLs[key] == bookmarkURL {
-                // resource already accessed, do nothing
-            } else {
-                // start access resource
-                if !bookmarkURL.startAccessingSecurityScopedResource() {
-                    // access failed
-                    bookmarkURL.stopAccessingSecurityScopedResource()
-                    return nil
-                }
+            if accessedURLs[key] != bookmarkURL {
+                // resource not already accessed, start access
+                _ = bookmarkURL.startAccessingSecurityScopedResource()
                 accessedURLs[key] = bookmarkURL
             }
             return bookmarkURL

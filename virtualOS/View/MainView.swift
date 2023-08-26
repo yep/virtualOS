@@ -10,7 +10,7 @@
 import SwiftUI
 
 struct MainView: View {
-    @ObservedObject var viewModel: MainViewModel
+    @ObservedObject var viewModel: ViewModel
 
     var body: some View {
         VStack {
@@ -51,7 +51,7 @@ struct MainView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(viewModel: MainViewModel())
+        MainView(viewModel: ViewModel())
     }
 }
 

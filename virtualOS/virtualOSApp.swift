@@ -17,7 +17,7 @@ struct virtualOSApp: App {
     static let logger = Logger(subsystem: "com.github.yep.virtualOS", category: "main")
     
     #if arch(arm64)
-    @StateObject var viewModel = MainViewModel()
+    @StateObject var viewModel = ViewModel()
     #endif
 
     @AppStorage("NSFullScreenMenuItemEverywhere") var fullScreenMenuItemEverywhere = false

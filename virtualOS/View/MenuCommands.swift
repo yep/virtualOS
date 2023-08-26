@@ -10,7 +10,7 @@ import SwiftUI
 #if arch(arm64)
 
 struct MenuCommands: Commands {
-    @ObservedObject var viewModel: MainViewModel
+    @ObservedObject var viewModel: ViewModel
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
@@ -30,7 +30,7 @@ struct MenuCommands: Commands {
             Divider()
             Button("Delete Restore Image") {
                 viewModel.deleteRestoreImage()
-            }.disabled(!MainViewModel.restoreImageExists)
+            }.disabled(!ViewModel.restoreImageExists)
             Button("Delete Virtual Machine", action: {
                 viewModel.deleteVirtualMachine()
             })
