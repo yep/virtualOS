@@ -22,7 +22,7 @@ final class VirtualMac: ObservableObject {
             memorySizeInGB    = try container.decode(UInt64.self, forKey: .memorySizeInGB)
             memorySizeInGBMin = try container.decode(UInt64.self, forKey: .memorySizeInGBMin)
             memorySizeInGBMax = try container.decode(UInt64.self, forKey: .memorySizeInGBMax)
-            useMainScreenSize = try container.decodeIfPresent(Bool.self, forKey: .useMainScreenSize) ?? false // optional
+            useMainScreenSize = try container.decodeIfPresent(Bool.self, forKey: .useMainScreenSize) ?? true // optional
             screenWidth       = try container.decode(Int.self, forKey: .screenWidth)
             screenHeight      = try container.decode(Int.self, forKey: .screenHeight)
             pixelsPerInch     = try container.decode(Int.self, forKey: .pixelsPerInch)
@@ -38,7 +38,7 @@ final class VirtualMac: ObservableObject {
         var memorySizeInGB: UInt64 = 1
         var memorySizeInGBMin: UInt64 = 1
         var memorySizeInGBMax: UInt64 = 2
-        var useMainScreenSize = false
+        var useMainScreenSize = true
         var screenWidth = 1500
         var screenHeight = 900
         var pixelsPerInch = 250
