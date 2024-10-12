@@ -11,34 +11,26 @@ extension URL {
     static let bundleName           = "virtualOS.bundle/"
     static let defaultVmBundlePath  = basePath + "/\(bundleName)"
     
+    static var baseURL: URL {
+        return URL(fileURLWithPath: basePath)
+    }
     static var vmBundleURL: URL {
-        return URL(fileURLWithPath: vmBundlePath)
+        return URL(fileURLWithPath: defaultVmBundlePath)
     }
-    static var diskImageURL: URL {
-        return URL(fileURLWithPath: vmBundlePath + "/Disk.img")
+    var auxiliaryStorageURL: URL {
+        return self.appending(path: "AuxiliaryStorage")
     }
-    static var auxiliaryStorageURL: URL {
-        return URL(fileURLWithPath: vmBundlePath + "/AuxiliaryStorage")
+    var hardwareModelURL: URL {
+        return self.appending(path: "HardwareModel")
     }
-    static var machineIdentifierURL: URL {
-        return URL(fileURLWithPath: vmBundlePath + "/MachineIdentifier")
+    var diskImageURL: URL {
+        return self.appending(path: "Disk.img")
     }
-    static var hardwareModelURL: URL {
-        return URL(fileURLWithPath: vmBundlePath + "/HardwareModel")
+    var machineIdentifierURL: URL {
+        return self.appending(path: "MachineIdentifier")
     }
-    static var parametersURL: URL {
-        return URL(fileURLWithPath: vmBundlePath + "/Parameters.txt")
-    }
-
-    static var vmBundlePath: String {
-        if let hardDiskDirectoryBookmarkData = UserDefaults.standard.hardDiskDirectoryBookmarkData,
-           let hardDiskDirectoryURL = Bookmark.startAccess(data: hardDiskDirectoryBookmarkData, forType: .hardDisk)
-        {
-            let vmBundlePath = hardDiskDirectoryURL.appendingPathComponent(bundleName).path
-            return vmBundlePath
-        } else {
-            return URL.defaultVmBundlePath
-        }
+    var parametersURL: URL {
+        return self.appending(path: "Parameters.txt")
     }
 }
 

@@ -2,7 +2,7 @@
 //  UserDefaults+Settings.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch on 03.07.22.
+//  Created by Jahn Bertsch.
 //
 
 import Foundation
@@ -16,7 +16,7 @@ extension UserDefaults {
             if object(forKey: Self.diskSizeKey) != nil {
                 return integer(forKey: Self.diskSizeKey)
             }
-            return 60 // default value
+            return 30 // default value
         }
         set {
             set(newValue, forKey: Self.diskSizeKey)
