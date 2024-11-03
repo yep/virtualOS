@@ -27,27 +27,16 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         configureStorageDevice(parameters: parameters, bundleURL: bundleURL)
         configureNetworkDevices(parameters: parameters)
         configureSharedFolder(parameters: parameters)
-        configureClipboardSharing(parameters: parameters)
-                
-        platform = macPlatformConfiguration
-    }
-    
-    fileprivate func configureClipboardSharing(parameters: VMParameters) {
-        let consoleDevice = VZVirtioConsoleDeviceConfiguration()
+        configureClipboardSharing()
+        configureUSB()
 
-        let spiceAgentPort = VZVirtioConsolePortConfiguration()
-        spiceAgentPort.name = VZSpiceAgentPortAttachment.spiceAgentPortName
-        spiceAgentPort.attachment = VZSpiceAgentPortAttachment()
-        consoleDevice.ports[0] = spiceAgentPort
-        
-        consoleDevices.append(consoleDevice)
+        platform = macPlatformConfiguration
     }
     
     func setDefault(parameters: inout VMParameters) {
         let cpuCountMax = computeCPUCount()
         let bytesMax = VZVirtualMachineConfiguration.maximumAllowedMemorySize
         let bytesMaxMinus2GB = bytesMax - UInt64(2).gigabytesToBytes() // substract 2 GB
-
         cpuCount   = cpuCountMax - 1 // substract one core
         memorySize = bytesMaxMinus2GB
 
@@ -64,7 +53,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         
         if parameters.microphoneEnabled {
             AVCaptureDevice.requestAccess(for: .audio) { (granted: Bool) in
-                self.logger.log(level: .default, "Microphone request granted: \(granted)")
+                self.logger.log(level: .default, "microphone request granted: \(granted)")
             }
             
             let inputStreamConfiguration = VZVirtioSoundDeviceInputStreamConfiguration()
@@ -111,7 +100,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
             let blockDeviceConfiguration = VZVirtioBlockDeviceConfiguration(attachment: diskImageStorageDeviceAttachment)
             storageDevices = [blockDeviceConfiguration]
         } else {
-            logger.log(level: .default, "Error: could not create storage device")
+            logger.log(level: .default, "could not create storage device")
         }
     }
     
@@ -136,6 +125,22 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         directorySharingDevices = [sharingConfiguration]
     }
     
+    fileprivate func configureClipboardSharing() {
+        let consoleDevice = VZVirtioConsoleDeviceConfiguration()
+
+        let spiceAgentPort = VZVirtioConsolePortConfiguration()
+        spiceAgentPort.name = VZSpiceAgentPortAttachment.spiceAgentPortName
+        spiceAgentPort.attachment = VZSpiceAgentPortAttachment()
+        consoleDevice.ports[0] = spiceAgentPort
+        
+        consoleDevices.append(consoleDevice)
+    }
+    
+    fileprivate func configureUSB() {
+        let usbControllerConfiguration = VZXHCIControllerConfiguration()
+        usbControllers = [usbControllerConfiguration]
+    }
+    
     fileprivate func computeCPUCount() -> Int {
         let totalAvailableCPUs = ProcessInfo.processInfo.processorCount
 
@@ -145,7 +150,6 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
 
         return virtualCPUCount
     }
-
 }
 
 #endif
