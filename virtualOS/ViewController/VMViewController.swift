@@ -2,7 +2,8 @@
 //  VMViewController.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import Virtualization
@@ -19,7 +20,6 @@ final class VMViewController: NSViewController {
     fileprivate var vmConfiguration: VMConfiguration?
     fileprivate var vm: VZVirtualMachine?
     fileprivate let vmView = VZVirtualMachineView()
-    fileprivate let logger = Logger.init(subsystem: "com.github.virtualOS", category: "log")
     fileprivate let queue = DispatchQueue.global(qos: .userInteractive)
 
     override func viewDidLoad() {
@@ -32,9 +32,9 @@ final class VMViewController: NSViewController {
             self?.vm?.start { (result: Result<Void, Error>) in
                 switch result {
                 case .success:
-                    self?.logger.log(level: .default, "running")
+                    Logger.shared.log(level: .default, "running")
                 case .failure(let error):
-                    self?.logger.log(level: .default, "running failed \(error.localizedDescription)")
+                    Logger.shared.log(level: .default, "running failed \(error.localizedDescription)")
                 }
             }
         }
@@ -43,28 +43,23 @@ final class VMViewController: NSViewController {
     // MARK: - Private
     
     fileprivate func createVM() {
-        if let bundleURL = vmBundle?.url,
-           let vmParameters = vmParameters,
-           let macPlatformConfiguration = MacPlatformConfiguration.read(fromBundleURL: bundleURL)
+        guard let bundleURL = vmBundle?.url,
+              let vmParameters = vmParameters,
+              let macPlatformConfiguration = MacPlatformConfiguration.read(fromBundleURL: bundleURL) else
         {
-            let vmConfiguration = VMConfiguration()
-            vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
-            self.vmConfiguration = vmConfiguration
-        } else {
-            logger.log(level: .default, "could not create vm config")
-            return
-        }
-
-        guard let vmConfiguration else {
-            logger.log(level: .default, "no vm config")
+            Logger.shared.log(level: .default, "could not create vm config")
             return
         }
         
+        let vmConfiguration = VMConfiguration()
+        vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+        self.vmConfiguration = vmConfiguration
+        
         do {
             try vmConfiguration.validate()
-            logger.log(level: .default, "vm configuration is valid")
+            Logger.shared.log(level: .default, "vm configuration is valid, using \(vmParameters.cpuCount) cpus and \(vmParameters.memorySizeInGB) gb ram")
         } catch let error {
-            logger.log(level: .default, "failed to validate vm configuration: \(error.localizedDescription)")
+            Logger.shared.log(level: .default, "failed to validate vm configuration: \(error.localizedDescription)")
             return
         }
         
@@ -108,14 +103,14 @@ extension VMViewController: VZVirtualMachineDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.statusLabel.stringValue = message
         }
-        logger.log(level: .default, "\(message)")
+        Logger.shared.log(level: .default, "\(message)")
     }
     
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: any Error) {
         DispatchQueue.main.async { [weak self] in
             self?.statusLabel.stringValue = "Guest did stop with error: \(error.localizedDescription)"
         }
-        logger.log(level: .default, "\(self.statusLabel.stringValue)")
+        Logger.shared.log(level: .default, "\(self.statusLabel.stringValue)")
     }
 }
 

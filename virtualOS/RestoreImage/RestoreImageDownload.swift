@@ -2,7 +2,8 @@
 //  Download.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import Virtualization
@@ -13,7 +14,7 @@ import OSLog
 
 protocol ProgressDelegate: AnyObject {
     func progress(_ progress: Double, progressString: String)
-    func done()
+    func done(error: Error?)
 }
 
 final class RestoreImageDownload {
@@ -21,7 +22,6 @@ final class RestoreImageDownload {
     fileprivate var observation: NSKeyValueObservation?
     fileprivate var downloadTask: URLSessionDownloadTask?
     fileprivate var downloading = true
-    fileprivate let logger = Logger.init(subsystem: "com.github.virtualOS", category: "log")
 
     deinit {
         observation?.invalidate()
@@ -33,8 +33,7 @@ final class RestoreImageDownload {
             case let .success(restoreImage):
                 download(restoreImage: restoreImage)
             case let .failure(error):
-                logger.log(level: .default, "failure: \(error.localizedDescription)")
-                delegate?.done()
+                delegate?.done(error: error)
             }
         }
     }
@@ -46,7 +45,7 @@ final class RestoreImageDownload {
     // MARK: - Private
     
     fileprivate func download(restoreImage: VZMacOSRestoreImage) {
-        logger.log(level: .default, "fetched, macOS \(restoreImage.operatingSystemVersionString)")
+        Logger.shared.log(level: .default, "fetched, macOS \(restoreImage.operatingSystemVersionString)")
                 
         let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) {localUrl, response, error in
             self.downloading = false
@@ -56,9 +55,9 @@ final class RestoreImageDownload {
         downloadTask.resume()
         self.downloadTask = downloadTask
         
-        logger.log(level: .default, "downloading")
+        Logger.shared.log(level: .default, "downloading")
         
-        func printProgress() {
+        func updateDownloadProgress() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
                 let progressString: String
                 
@@ -71,33 +70,34 @@ final class RestoreImageDownload {
                 } else {
                     progressString = "Restore Image\nDownloading \(Int(downloadTask.progress.fractionCompleted * 100))%"
                 }
-                self?.logger.log(level: .default, "\(progressString)")
+                Logger.shared.log(level: .default, "\(progressString)")
                 
                 self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: progressString)
 
                 if let downloading = self?.downloading, downloading {
-                    printProgress()
+                    updateDownloadProgress()
                 }
             }
         }
-        printProgress()
+        
+        updateDownloadProgress()
     }
     
     fileprivate func downloadFinished(localURL: URL?, error: Error?) {
-        logger.log(level: .default, "download finished")
-        delegate?.progress(100, progressString: "Error")
+        Logger.shared.log(level: .default, "download finished")
+        delegate?.progress(100, progressString: "Done")
         
         if let error = error {
-            logger.log(level: .default, "\(error.localizedDescription)")
-            return
+            Logger.shared.log(level: .default, "\(error.localizedDescription)")
+            delegate?.done(error: error)
         }
         
         if let localURL = localURL {
             try? FileManager.default.moveItem(at: localURL, to: URL.restoreImageURL)
-            logger.log(level: .default, "moved restore image to \(URL.restoreImageURL)")
-            delegate?.done()
+            Logger.shared.log(level: .default, "moved restore image to \(URL.restoreImageURL)")
+            delegate?.done(error: nil)
         } else {
-            logger.log(level: .default, "failed to move downloaded restore image to \(URL.restoreImageURL)")
+            Logger.shared.log(level: .default, "failed to move downloaded restore image to \(URL.restoreImageURL)")
             return
         }
     }

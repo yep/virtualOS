@@ -3,6 +3,7 @@
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 #if arch(arm64)
@@ -22,7 +23,8 @@ struct VMParameters: Codable {
     var screenHeight = 900
     var pixelsPerInch = 250
     var microphoneEnabled = false
-    var sharedFolder: Data?
+    var sharedFolderURL: URL?
+    var sharedFolderData: Data?
     var macAddress = VZMACAddress.randomLocallyAdministered().string
     var version = ""
     
@@ -42,7 +44,8 @@ struct VMParameters: Codable {
         screenHeight      = try container.decode(Int.self, forKey: .screenHeight)
         pixelsPerInch     = try container.decode(Int.self, forKey: .pixelsPerInch)
         microphoneEnabled = try container.decode(Bool.self, forKey: .microphoneEnabled)
-        sharedFolder      = try container.decodeIfPresent(Data.self, forKey: .sharedFolder) ?? nil // optional
+        sharedFolderURL   = try container.decodeIfPresent(URL.self, forKey: .sharedFolderURL) ?? nil // optional
+        sharedFolderData  = try container.decodeIfPresent(Data.self, forKey: .sharedFolderData) ?? nil // optional
         macAddress        = try container.decodeIfPresent(String.self, forKey: .macAddress) ?? VZMACAddress.randomLocallyAdministered().string // optional
         version           = try container.decodeIfPresent(String.self, forKey: .version) ?? "" // optional
 

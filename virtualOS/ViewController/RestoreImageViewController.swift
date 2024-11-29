@@ -2,7 +2,8 @@
 //  RestoreImageViewController.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import AppKit
@@ -14,10 +15,9 @@ import OSLog
 final class RestoreImageViewController: NSViewController {
     let fileModel = FileModel()
     fileprivate var selectedRestoreImage = ""
-    fileprivate let logger = Logger.init(subsystem: "com.github.virtualOS", category: "log")
 
     @IBOutlet weak var tableView: NSTableView!
-    @IBOutlet weak var selectButton: NSButton!
+    @IBOutlet weak var installButton: NSButton!
     @IBOutlet weak var infoTextField: NSTextField!
     
     override func viewDidLoad() {
@@ -31,13 +31,13 @@ final class RestoreImageViewController: NSViewController {
         tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
         updateInfoLabel()
         if tableView.numberOfRows > 0 {
-            selectButton.isEnabled = true
+            installButton.isEnabled = true
         } else {
-            selectButton.isEnabled = false
+            installButton.isEnabled = false
         }
     }
     
-    @IBAction func selectButtonPressed(_ sender: NSButton) {
+    @IBAction func installButtonPressed(_ sender: NSButton) {
         if tableView.selectedRow != -1 {
             let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImage: self.selectedRestoreImage])
                 NotificationCenter.default.post(notification)
@@ -65,7 +65,7 @@ final class RestoreImageViewController: NSViewController {
                         self?.infoTextField.stringValue = restoreImage.operatingSystemVersionString
                     }
                 case .failure(let error):
-                    self.logger.log(level: .default, "\(error)")
+                    Logger.shared.log(level: .default, "\(error)")
                 }
             }
         } else {
@@ -96,9 +96,9 @@ extension RestoreImageViewController: NSTableViewDelegate {
         let selectedRow = tableView.selectedRow
         if selectedRow != -1 && selectedRow < restoreImages.count {
             selectedRestoreImage = restoreImages[selectedRow]
-            selectButton.isEnabled = true
+            installButton.isEnabled = true
         } else {
-            selectButton.isEnabled = false
+            installButton.isEnabled = false
         }
         updateInfoLabel()
     }

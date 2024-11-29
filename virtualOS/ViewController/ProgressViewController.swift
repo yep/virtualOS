@@ -2,7 +2,8 @@
 //  ProgressViewController.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import AppKit
@@ -17,20 +18,20 @@ final class ProgressViewController: NSViewController {
     }
 
     @IBOutlet weak var progressIndicator: NSProgressIndicator!
-    @IBOutlet weak var statusTextField: NSTextField!
+    @IBOutlet weak var statusTextField: NSTextField!    
+    @IBOutlet weak var cancelButton: NSButton!
     
     var mode: Mode = .download
     var restoreImageName: String?
     var diskImageSize: Int? = 0
     fileprivate let restoreImageDownload = RestoreImageDownload()
     fileprivate var restoreImageInstall = RestoreImageInstall()
-    fileprivate let logger = Logger.init(subsystem: "com.github.virtualOS", category: "log")
 
     override func viewWillAppear() {
         super.viewWillAppear()
         progressIndicator.doubleValue = 0
         statusTextField.stringValue = "Starting"
-        // logger.log(level: .default, "\(progressViewController.mode): \(mode))")
+        // Logger.shared.log(level: .default, "\(progressViewController.mode): \(mode))")
     }
     
     override func viewDidAppear() {
@@ -73,14 +74,31 @@ final class ProgressViewController: NSViewController {
 
 extension ProgressViewController: ProgressDelegate {
     func progress(_ progress: Double, progressString: String) {
-        progressIndicator.doubleValue = progress * 100
-        statusTextField.stringValue = progressString
+        func updateUI() {
+            progressIndicator.doubleValue = progress * 100
+            statusTextField.stringValue = progressString
+        }
+        
+        if Thread.isMainThread {
+            updateUI()
+        } else {
+            DispatchQueue.main.async {
+                updateUI()
+            }
+        }
     }
     
-    func done() {
+    func done(error: Error? = nil) {
         DispatchQueue.main.async { [weak self] in
             if let mainViewController = self?.presentingViewController as? MainViewController {
                 mainViewController.dismiss(self)
+                if let error = error {
+                    mainViewController.showErrorAlert(error: error)
+                    self?.statusTextField.stringValue = "Install Failed."
+                    self?.cancelButton.title = "Close"
+                } else {
+                    self?.cancelButton.title = "Done"
+                }
             }
         }
     }

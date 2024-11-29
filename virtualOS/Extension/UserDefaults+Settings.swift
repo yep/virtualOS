@@ -3,13 +3,15 @@
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import Foundation
 
 extension UserDefaults {
-    fileprivate static let diskSizeKey         = "diskSize"
-    fileprivate static let hardDiskBookmarkKey = "hardDiskBookmark"
+    fileprivate static let diskSizeKey                  = "diskSize"
+    fileprivate static let vmFilesDirectoryKey          = "vmFilesDirectoryKey"
+    fileprivate static let vmFilesDirectoryBookmarkData = "vmFilesDirectoryBookmarkData"
 
     var diskSize: Int {
         get {
@@ -24,12 +26,22 @@ extension UserDefaults {
         }
     }
     
-    var hardDiskDirectoryBookmarkData: Data? {
+    var vmFilesDirectory: String? {
         get {
-            return data(forKey: Self.hardDiskBookmarkKey)
+            return string(forKey: Self.vmFilesDirectoryKey)
         }
         set {
-            set(newValue, forKey: Self.hardDiskBookmarkKey)
+            set(newValue, forKey: Self.vmFilesDirectoryKey)
+            synchronize()
+        }
+    }
+
+    var vmFilesDirectoryBookmarkData: Data? {
+        get {
+            return data(forKey: Self.vmFilesDirectoryBookmarkData)
+        }
+        set {
+            set(newValue, forKey: Self.vmFilesDirectoryBookmarkData)
             synchronize()
         }
     }

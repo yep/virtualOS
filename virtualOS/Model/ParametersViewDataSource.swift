@@ -3,6 +3,7 @@
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import AppKit
@@ -10,10 +11,10 @@ import AppKit
 #if arch(arm64)
 
 final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
-    var vmParameters: VMParameters?
+    weak var mainViewModel: MainViewModel?
     
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
-        if vmParameters != nil {
+        if mainViewModel?.vmParameters != nil {
             return 5
         } else {
             return 0
@@ -21,7 +22,7 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     }
     
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
-        if let vmParameters = vmParameters {
+        if let vmParameters = mainViewModel?.vmParameters {
             switch index {
             case 0:
                 return ["CPU Count", "\(vmParameters.cpuCount)"]
@@ -43,10 +44,11 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     }
     
     fileprivate func sharedFolderInfo(vmParameters: VMParameters) -> String {
-        if let sharedFolderData = vmParameters.sharedFolder {
-            if let sharedFolderURL = Bookmark.startAccess(bookmarkData: sharedFolderData) {
-                return sharedFolderURL.path()
-            }
+        if let sharedFolderURL = vmParameters.sharedFolderURL,
+           let sharedFolderData = vmParameters.sharedFolderData,
+           let bookmarkURL = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderURL.absoluteString)
+        {
+            return bookmarkURL.path()
         }
         return "No shared folder"
     }

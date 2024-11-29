@@ -3,6 +3,7 @@
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 #if arch(arm64)
@@ -12,8 +13,6 @@ import AVFoundation // for audio
 import OSLog
 
 final class VMConfiguration: VZVirtualMachineConfiguration {
-    fileprivate let logger = Logger.init(subsystem: "com.github.virtualOS", category: "log")
-
     func setup(parameters: VMParameters, macPlatformConfiguration: VZMacPlatformConfiguration, bundleURL: URL) {
         cpuCount        = parameters.cpuCount
         memorySize      = parameters.memorySizeInGB.gigabytesToBytes()
@@ -36,9 +35,8 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
     func setDefault(parameters: inout VMParameters) {
         let cpuCountMax = computeCPUCount()
         let bytesMax = VZVirtualMachineConfiguration.maximumAllowedMemorySize
-        let bytesMaxMinus2GB = bytesMax - UInt64(2).gigabytesToBytes() // substract 2 GB
         cpuCount   = cpuCountMax - 1 // substract one core
-        memorySize = bytesMaxMinus2GB
+        memorySize = bytesMax - UInt64(3).gigabytesToBytes() // substract 3 GB
 
         parameters.cpuCount = cpuCount
         parameters.cpuCountMax = cpuCountMax
@@ -53,7 +51,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         
         if parameters.microphoneEnabled {
             AVCaptureDevice.requestAccess(for: .audio) { (granted: Bool) in
-                self.logger.log(level: .default, "microphone request granted: \(granted)")
+                Logger.shared.log(level: .default, "microphone request granted: \(granted)")
             }
             
             let inputStreamConfiguration = VZVirtioSoundDeviceInputStreamConfiguration()
@@ -87,7 +85,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         do {
             diskImageStorageDeviceAttachment = try VZDiskImageStorageDeviceAttachment(url: bundleURL.diskImageURL, readOnly: false)
         } catch let error {
-            logger.log(level: .default, "could not create storage device: \(error.localizedDescription)")
+            Logger.shared.log(level: .default, "could not create storage device: \(error.localizedDescription)")
             return
         }
         
@@ -100,7 +98,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
             let blockDeviceConfiguration = VZVirtioBlockDeviceConfiguration(attachment: diskImageStorageDeviceAttachment)
             storageDevices = [blockDeviceConfiguration]
         } else {
-            logger.log(level: .default, "could not create storage device")
+            Logger.shared.log(level: .default, "could not create storage device")
         }
     }
     
@@ -113,7 +111,9 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
     }
 
     fileprivate func configureSharedFolder(parameters: VMParameters) {
-        guard let sharedFolderBookmarkData = Bookmark.startAccess(bookmarkData: parameters.sharedFolder) else {
+        guard let sharedFolderURL = parameters.sharedFolderURL,
+              let sharedFolderBookmarkData = Bookmark.startAccess(bookmarkData: parameters.sharedFolderData, for: sharedFolderURL.absoluteString) else
+        {
             return
         }
                 
@@ -128,10 +128,10 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
     fileprivate func configureClipboardSharing() {
         let consoleDevice = VZVirtioConsoleDeviceConfiguration()
 
-        let spiceAgentPort = VZVirtioConsolePortConfiguration()
-        spiceAgentPort.name = VZSpiceAgentPortAttachment.spiceAgentPortName
-        spiceAgentPort.attachment = VZSpiceAgentPortAttachment()
-        consoleDevice.ports[0] = spiceAgentPort
+        let spiceAgentPortConfiguration = VZVirtioConsolePortConfiguration()
+        spiceAgentPortConfiguration.name = VZSpiceAgentPortAttachment.spiceAgentPortName
+        spiceAgentPortConfiguration.attachment = VZSpiceAgentPortAttachment()
+        consoleDevice.ports[0] = spiceAgentPortConfiguration
         
         consoleDevices.append(consoleDevice)
     }

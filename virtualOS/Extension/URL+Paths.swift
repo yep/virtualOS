@@ -9,13 +9,13 @@ extension URL {
     static let basePath             = NSHomeDirectory() + "/Documents"
     static let restoreImageURL      = URL(fileURLWithPath: basePath + "/RestoreImage.ipsw")
     static let bundleName           = "virtualOS.bundle/"
-    static let defaultVmBundlePath  = basePath + "/\(bundleName)"
+    static let defaultVMBundlePath  = basePath + "/\(bundleName)"
     
     static var baseURL: URL {
         return URL(fileURLWithPath: basePath)
     }
     static var vmBundleURL: URL {
-        return URL(fileURLWithPath: defaultVmBundlePath)
+        return URL(fileURLWithPath: defaultVMBundlePath)
     }
     var auxiliaryStorageURL: URL {
         return self.appending(path: "AuxiliaryStorage")

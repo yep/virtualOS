@@ -2,7 +2,8 @@
 //  MainViewModel.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import AppKit
@@ -17,6 +18,10 @@ final class MainViewModel {
     var vmBundle: VMBundle?
     var selectedRow: Int? = 0
     var vmParameters: VMParameters?
+    
+    init() {
+        parametersViewDataSource.mainViewModel = self
+    }
     
     func storeParametersToDisk() {
         if let vmParameters = vmParameters,
@@ -35,28 +40,26 @@ final class MainViewModel {
         }
     }
     
-    func set(sharedFolderUrl: URL?) -> VMParameters? {
+    func set(sharedFolderUrl: URL?) {
         var sharedFolderData: Data? = nil
 
         if let sharedFolderUrl {
             sharedFolderData = Bookmark.createBookmarkData(fromUrl: sharedFolderUrl)
             if let sharedFolderData {
-                _ = Bookmark.startAccess(bookmarkData: sharedFolderData)
+                _ = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderUrl.absoluteString)
+                
+                if let selectedRow {
+                    let bundle = tableViewDataSource.vmBundle(forRow: selectedRow)
+                    if let bundleURL = bundle?.url {
+                        var vmParameters = VMParameters.readFrom(url: bundleURL)
+                        vmParameters?.sharedFolderURL  = sharedFolderUrl
+                        vmParameters?.sharedFolderData = sharedFolderData
+                        vmParameters?.writeToDisk(bundleURL: bundleURL)
+                        self.vmParameters = vmParameters
+                    }
+                }
             }
         }
-        
-        if let selectedRow {
-            let bundle = tableViewDataSource.vmBundle(forRow: selectedRow)
-            if let bundleURL = bundle?.url {
-                var vmParameters = VMParameters.readFrom(url: bundleURL)
-                vmParameters?.sharedFolder = sharedFolderData
-                vmParameters?.writeToDisk(bundleURL: bundleURL)
-                self.vmParameters = vmParameters
-                return vmParameters
-            }
-        }
-        
-        return nil
     }
 }
 

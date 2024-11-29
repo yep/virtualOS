@@ -2,7 +2,8 @@
 //  UInt+Byte.swift
 //  virtualOS
 //
-//  Created by Jahn Bertsch on 16.03.22.
+//  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import Foundation

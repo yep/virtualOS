@@ -3,6 +3,7 @@
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
+//  Licensed under the Apache License, see LICENSE file.
 //
 
 import Cocoa
@@ -14,7 +15,7 @@ import OSLog
 final class MainViewController: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var vmNameTextField: NSTextField!
-    @IBOutlet weak var parameterOutlinew: NSOutlineView!
+    @IBOutlet weak var parameterOutlineView: NSOutlineView!
     @IBOutlet weak var startButton: NSButton!
     @IBOutlet weak var sharedFolderButton: NSButton!
     @IBOutlet weak var deleteButton: NSButton!
@@ -25,21 +26,20 @@ final class MainViewController: NSViewController {
     
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
-    fileprivate let logger = Logger()
     fileprivate var diskImageSize = 1
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.dataSource         = viewModel.tableViewDataSource
-        tableView.delegate           = self
-        parameterOutlinew.dataSource = viewModel.parametersViewDataSource
-        parameterOutlinew.delegate   = viewModel.parametersViewDelegate
-        vmNameTextField.delegate     = viewModel.textFieldDelegate
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: NSApplication.didBecomeActiveNotification, object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(textDidEndEditing), name: NSControl.textDidEndEditingNotification, object: nil)
+        tableView.dataSource            = viewModel.tableViewDataSource
+        tableView.delegate              = self
+        parameterOutlineView.dataSource = viewModel.parametersViewDataSource
+        parameterOutlineView.delegate   = viewModel.parametersViewDelegate
+        vmNameTextField.delegate        = viewModel.textFieldDelegate
+
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeVMLocationNotification, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
 
@@ -48,49 +48,6 @@ final class MainViewController: NSViewController {
         cpuCountSlider.target = self
         cpuCountSlider.action = #selector(cpuCountChanged(sender:))
     }
-    
-    @objc func didBecomeActive(notification: Notification) {
-        self.tableView.reloadData()
-        self.updateUI()
-    }
-    
-    @objc func textDidEndEditing(notification: Notification) {
-        self.tableView.reloadData()
-        self.updateUI()
-    }
-    
-    @objc func restoreImageSelected(notification: Notification) {
-        if let userInfo = notification.userInfo,
-           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String
-        {
-            if restoreImageName != Constants.restoreImageNameLatest {
-                let accessory = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
-                accessory.stringValue = "\(UserDefaults.standard.diskSize)"
-                
-                let alert: NSAlert = NSAlert()
-                alert.messageText = "Disk Image Size in GB"
-                alert.informativeText = "Disk size can not be changed after VM is created."
-                alert.accessoryView = accessory
-                alert.alertStyle = .informational
-                alert.addButton(withTitle: "OK")
-                alert.addButton(withTitle: "Cancel")
-                            
-                let modalResponse = alert.runModal()
-                accessory.becomeFirstResponder()
-
-                if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
-                    diskImageSize = Int(accessory.intValue)
-                } else {
-                    return // cancel install
-                }
-                if diskImageSize < 30 {
-                    self.diskImageSize = 30
-                }
-            }
-            
-            showSheet(mode: .install, restoreImageName: restoreImageName, diskImageSize: self.diskImageSize)
-        }
-    }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -98,30 +55,42 @@ final class MainViewController: NSViewController {
 
     override func viewWillAppear() {
         super.viewWillAppear()
+        view.window?.delegate = self
         vmNameTextField.resignFirstResponder()
-        tableView.reloadData()
+        if let bookmarkURL = UserDefaults.standard.vmFilesDirectory,
+           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+        {
+            _ = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURL)            
+        }
         self.updateUI()
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController,
-           let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController
+        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
+           let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
         {
             vmViewController.vmBundle = viewModel.vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
             windowController.showWindow(self)
             windowController.contentViewController = vmViewController
         } else {
-            logger.log(level: .default, "show window failed")
+            Logger.shared.log(level: .default, "show vm window failed")
         }
     }
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
-        if let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController,
-           let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController
+        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
+           let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
         {
             windowController.showWindow(self)
             windowController.contentViewController = restoreImageViewController
+            if let parentFrame = view.window?.frame,
+               let childWindow = restoreImageViewController.view.window
+            {
+                childWindow.setFrame(parentFrame.offsetBy(dx: 200, dy: 10), display: true)
+            }
+        } else {
+            Logger.shared.log(level: .default, "show restore image window failed")
         }
     }
     
@@ -130,21 +99,16 @@ final class MainViewController: NSViewController {
             return
         }
         
-        let alert: NSAlert = NSAlert()
-        alert.messageText = "Delete VM '\(vmBundle.name)'?"
-        alert.informativeText = "This can not be undone."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Cancel")
-        
+        let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Delete VM '\(vmBundle.name)'?", informativeText: "This can not be undone.", alertStyle: .warning)
         let selection = alert.runModal()
         if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
            selection == NSApplication.ModalResponse.OK
         {
             viewModel.deleteVM(selection: selection, vmBundle: vmBundle)
             viewModel.vmBundle = nil
+            viewModel.vmParameters = nil
         }
-        tableView.reloadData()
+
         self.updateUI()
     }
         
@@ -163,27 +127,47 @@ final class MainViewController: NSViewController {
         } else if modalResponse == .cancel {
             sharedFolderURL = nil
         }
-        if let vmParameters = viewModel.set(sharedFolderUrl: sharedFolderURL) {
-            viewModel.parametersViewDataSource.vmParameters = vmParameters
-            parameterOutlinew.reloadData()
+        
+        viewModel.set(sharedFolderUrl: sharedFolderURL)
+        updateOutlineView()
+    }
+    
+    @objc func restoreImageSelected(notification: Notification) {
+        if let userInfo = notification.userInfo,
+           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String
+        {
+            if restoreImageName != Constants.restoreImageNameLatest {
+                let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
+                accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
+                
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB. During install, a lot of RAM is used, ignore the warning about low system memory.", accessoryView: accessoryView)
+                let modalResponse = alert.runModal()
+                accessoryView.becomeFirstResponder()
+
+                if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
+                    diskImageSize = Int(accessoryView.intValue)
+                } else {
+                    return // cancel install
+                }
+                if diskImageSize < 30 {
+                    self.diskImageSize = 30
+                }
+            }
+            
+            showSheet(mode: .install, restoreImageName: restoreImageName, diskImageSize: self.diskImageSize)
         }
     }
     
-    @IBAction func usbButtonPressed(_ sender: NSButtonCell) {
-        print("usb")
-    }
-
     @objc func cpuCountChanged(sender: NSSlider) {
-        updateLabels()
-        viewModel.storeParametersToDisk()
+        updateUIAndStoreParametersToDisk()
     }
     
     @objc func memorySliderChanged(sender: NSSlider) {
-        updateLabels()
-        viewModel.storeParametersToDisk()
+        updateUIAndStoreParametersToDisk()
     }
         
-    func updateUI() {
+    @objc func updateUI() {
+        self.tableView.reloadData()
         cpuCountSlider.isEnabled = false
         ramSlider.isEnabled = false
         
@@ -195,32 +179,51 @@ final class MainViewController: NSViewController {
             viewModel.vmBundle = vmBundle
             if let vmParameters = VMParameters.readFrom(url: vmBundle.url) {
                 viewModel.vmParameters = vmParameters
-                viewModel.parametersViewDataSource.vmParameters = viewModel.vmParameters
-                parameterOutlinew.reloadData()
                 viewModel.textFieldDelegate.vmBundle = vmBundle
+                updateButtons(enabled: true)
+                updateLabels(setZero: false)
                 updateCpuCount(vmParameters)
                 updateRam(vmParameters)
-                updateLabels()
-                updateButtons(enabled: true)
             }
         } else {
             vmNameTextField.stringValue = ""
-            viewModel.parametersViewDataSource.vmParameters = nil
             viewModel.selectedRow = 0
-            updateLabels(setZero: true)
             updateButtons(enabled: false)
+            updateLabels(setZero: true)
         }
-        tableView.reloadData()
+
+        updateOutlineView()
     }
     
+    func showErrorAlert(error: Error) {
+        var messageText = "Error"
+        var informativeText = "An unknown error occurred."
+        
+        if let vzError = error as? VZError,
+           let reason = vzError.userInfo[NSLocalizedFailureErrorKey] as? String,
+           let failureReason = vzError.userInfo[NSLocalizedFailureReasonErrorKey] as? String,
+           let underlyingError = vzError.userInfo[NSUnderlyingErrorKey] as? NSError
+        {
+            messageText = failureReason
+            informativeText = reason + " " + underlyingError.localizedDescription + "\n\n(Error Code: \(vzError.errorCode), Underlying Error Domain: \(underlyingError.domain), Underlying Error Code: \(underlyingError.code))"
+            Logger.shared.log(level: .default, "vz error: \(messageText) \(informativeText)")
+        } else {
+            informativeText = error.localizedDescription
+            Logger.shared.log(level: .default, "error: \(error.localizedDescription)")
+        }
+
+        let alert = NSAlert.okCancelAlert(messageText: messageText, informativeText: informativeText, showCancelButton: false)
+        let _ = alert.runModal()
+    }
+    
+    // MARK: - Private
+
     fileprivate func updateButtons(enabled: Bool) {
         startButton.isEnabled = enabled
         sharedFolderButton.isEnabled = enabled
         deleteButton.isEnabled = enabled
         vmNameTextField.isEnabled = enabled
     }
-    
-    // MARK: - Private
     
     fileprivate func updateCpuCount(_ vmParameters: VMParameters) {
         cpuCountSlider.minValue = Double(vmParameters.cpuCountMin)
@@ -238,7 +241,7 @@ final class MainViewController: NSViewController {
         ramSlider.isEnabled = true
     }
     
-    fileprivate func updateLabels(setZero: Bool = false) {
+    fileprivate func updateLabels(setZero: Bool) {
         let cpuCount = Int(round(cpuCountSlider.doubleValue))
         let memorySizeInGB = Int(round(ramSlider.doubleValue))
         viewModel.vmParameters?.cpuCount = cpuCount
@@ -251,26 +254,16 @@ final class MainViewController: NSViewController {
             cpuCountLabel.stringValue = "CPU Count: \(cpuCount)"
             ramLabel.stringValue = "RAM: \(memorySizeInGB) GB"
         }
-        
-        viewModel.parametersViewDataSource.vmParameters = viewModel.vmParameters
-        parameterOutlinew.reloadData()
     }
     
-    // MARK: - Private
+    fileprivate func updateOutlineView() {
+        parameterOutlineView.reloadData()
+    }
     
-    fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
-        if let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
-           let progressWindow = progressWindowController.window
-        {
-            if let progressViewController = progressWindow.contentViewController as? ProgressViewController {
-                progressViewController.mode = mode
-                progressViewController.diskImageSize = diskImageSize
-                progressViewController.restoreImageName = restoreImageName
-                presentAsSheet(progressViewController)
-            }
-        } else {
-            logger.log(level: .default, "show modal failed")
-        }
+    fileprivate func updateUIAndStoreParametersToDisk() {
+        viewModel.storeParametersToDisk()
+        updateLabels(setZero: false)
+        updateOutlineView()
     }
     
     fileprivate func updateButtonEnabledState() {
@@ -284,6 +277,21 @@ final class MainViewController: NSViewController {
         deleteButton.isEnabled       = enabled
         ramSlider.isEnabled          = enabled
         cpuCountSlider.isEnabled     = enabled
+    }
+
+    fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
+        if let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
+           let progressWindow = progressWindowController.window
+        {
+            if let progressViewController = progressWindow.contentViewController as? ProgressViewController {
+                progressViewController.mode = mode
+                progressViewController.diskImageSize = diskImageSize
+                progressViewController.restoreImageName = restoreImageName
+                presentAsSheet(progressViewController)
+            }
+        } else {
+            Logger.shared.log(level: .default, "show modal failed")
+        }
     }
 }
 
@@ -302,6 +310,21 @@ extension MainViewController: NSTableViewDelegate {
             viewModel.selectedRow = row
             updateUI()
             updateButtonEnabledState()
+        }
+    }
+}
+
+extension MainViewController: NSWindowDelegate  {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Quit", informativeText: "Quitting the app will stop all virtual machines.", alertStyle: .warning)
+        let selection = alert.runModal()
+        if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
+           selection == NSApplication.ModalResponse.OK
+        {
+            NSApplication.shared.terminate(self)
+            return true
+        } else {
+            return false
         }
     }
 }
