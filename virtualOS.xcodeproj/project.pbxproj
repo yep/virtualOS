@@ -14,7 +14,7 @@
 		014188A22CD756B200DCD9A0 /* Exceptions for "virtualOS" folder in "virtualOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 015228542CB27BC100209934 /* virtualOS */;
 		};
@@ -273,7 +273,7 @@
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = virtualOS/Info.plist;
+				INFOPLIST_FILE = virtualOS/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -306,7 +306,7 @@
 				DEVELOPMENT_TEAM = 2AD47BTDQ6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = virtualOS/Info.plist;
+				INFOPLIST_FILE = virtualOS/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;

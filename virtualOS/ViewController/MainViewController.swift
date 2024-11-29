@@ -131,7 +131,7 @@ final class MainViewController: NSViewController {
         }
         
         let alert: NSAlert = NSAlert()
-        alert.messageText = "Delete VM \(vmBundle.name)?"
+        alert.messageText = "Delete VM '\(vmBundle.name)'?"
         alert.informativeText = "This can not be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
