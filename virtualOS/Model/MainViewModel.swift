@@ -46,7 +46,7 @@ final class MainViewModel {
         if let sharedFolderUrl {
             sharedFolderData = Bookmark.createBookmarkData(fromUrl: sharedFolderUrl)
             if let sharedFolderData {
-                _ = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderUrl.absoluteString)
+                _ = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderUrl.path)
                 
                 if let selectedRow {
                     let bundle = tableViewDataSource.vmBundle(forRow: selectedRow)

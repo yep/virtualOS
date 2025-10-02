@@ -9,9 +9,7 @@
 import Foundation
 import OSLog
 
-struct Bookmark {
-    static let vmFilesLocation: String = "virtualOS://files"
-    
+struct Bookmark {    
     fileprivate static var accessedURLs: [String: URL] = [:]
 
     static func createBookmarkData(fromUrl url: URL) -> Data? {
@@ -21,23 +19,28 @@ struct Bookmark {
         return nil
     }
     
-    static func startAccess(bookmarkData: Data?, for absoluteURL: String) -> URL? {
+    static func startAccess(bookmarkData: Data?, for path: String) -> URL? {
         var bookmarkDataIsStale = false
         if let bookmarkData = bookmarkData,
            let bookmarkURL = try? URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale),
            !bookmarkDataIsStale
         {
             // stop accessing previous resource
-            if let previousURL = accessedURLs[absoluteURL],
+            if let previousURL = accessedURLs[path],
                previousURL != bookmarkURL
             {
                 previousURL.stopAccessingSecurityScopedResource()
+                Logger.shared.log(level: .default, "stop accessing security scoped resource (1): \(previousURL.path())")
             }
             
-            if accessedURLs[absoluteURL] != bookmarkURL {
+            if accessedURLs[path] != bookmarkURL {
                 // resource not already accessed, start access
-                _ = bookmarkURL.startAccessingSecurityScopedResource()
-                accessedURLs[absoluteURL] = bookmarkURL
+                if bookmarkURL.startAccessingSecurityScopedResource() {
+                    Logger.shared.log(level: .default, "start accessing security scoped resource: \(path)")
+                } else {
+                    Logger.shared.log(level: .default, "stop accessing security scoped resource failed")
+                }
+                accessedURLs[path] = bookmarkURL
             }
             return bookmarkURL
         }
@@ -47,12 +50,14 @@ struct Bookmark {
     
     static func stopAccess(url: URL) {
         url.stopAccessingSecurityScopedResource()
-        Self.accessedURLs[url.absoluteString] = nil
+        Logger.shared.log(level: .default, "stop accessing security scoped resource (2): \(url.path)")
+        Self.accessedURLs[url.path] = nil
     }
     
     static func stopAllAccess() {
-        for (_, accessedURL) in accessedURLs {
+        for (urlString, accessedURL) in accessedURLs {
             accessedURL.stopAccessingSecurityScopedResource()
+            Logger.shared.log(level: .default, "stop accessing security scoped resource (3): \(urlString)")
         }
         Self.accessedURLs = [:]
     }

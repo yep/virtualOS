@@ -9,10 +9,6 @@
 import Foundation
 
 struct FileModel {
-    var bundleExists: Bool {
-        return FileManager.default.fileExists(atPath: URL.vmBundleURL.path())
-    }
-    
     var restoreImageExists: Bool {
         return FileManager.default.fileExists(atPath: URL.restoreImageURL.path)
     }
