@@ -9,6 +9,7 @@
 #if arch(arm64)
 
 import Virtualization
+import OSLog
 
 struct VMParameters: Codable {
     var cpuCount = 1
@@ -57,7 +58,7 @@ struct VMParameters: Codable {
             let json = try Data.init(contentsOf: url.appendingPathComponent("Parameters.txt", conformingTo: .text))
             return try decoder.decode(VMParameters.self, from: json)
         } catch {
-            print("failed to read parameters")
+            Logger.shared.log(level: .default, "failed to read parameters from \(url)")
         }
         return nil
     }
@@ -72,7 +73,7 @@ struct VMParameters: Codable {
                 try json.write(to: bundleURL.parametersURL, atomically: true, encoding: String.Encoding.utf8)
             }
         } catch {
-            print("failed to write current CPU and RAM configuration to disk")
+            Logger.shared.log(level: .default, "failed to write current CPU and RAM configuration to disk")
         }
     }
 }

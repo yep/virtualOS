@@ -26,14 +26,15 @@ final class SettingsViewController: NSViewController {
             return
         }
         
+        let vmFilesPath = vmFilesURL.path(percentEncoded: false)
         if let bookmarkData = Bookmark.createBookmarkData(fromUrl: vmFilesURL),
-           Bookmark.startAccess(bookmarkData: bookmarkData, for: Bookmark.vmFilesLocation) != nil
+           Bookmark.startAccess(bookmarkData: bookmarkData, for: vmFilesPath) != nil
         {
-            UserDefaults.standard.vmFilesDirectory = vmFilesURL.path()
+            UserDefaults.standard.vmFilesDirectory = vmFilesPath
             UserDefaults.standard.vmFilesDirectoryBookmarkData = bookmarkData
             postNotification()
         } else {
-            Logger.shared.log("Could not create or start accessing bookmark \(vmFilesURL.absoluteString)")
+            Logger.shared.log("Could not create or start accessing bookmark \(vmFilesURL.path)")
         }
     }
     

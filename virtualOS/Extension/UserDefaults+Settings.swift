@@ -45,4 +45,9 @@ extension UserDefaults {
             synchronize()
         }
     }
+    
+    func resetVMFilesDirectory() {
+        UserDefaults.standard.vmFilesDirectory = URL.baseURL.path
+        UserDefaults.standard.vmFilesDirectoryBookmarkData = Bookmark.createBookmarkData(fromUrl: URL.baseURL)        
+    }
 }

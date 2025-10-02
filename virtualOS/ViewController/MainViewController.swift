@@ -52,16 +52,12 @@ final class MainViewController: NSViewController {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     override func viewWillAppear() {
         super.viewWillAppear()
         view.window?.delegate = self
         vmNameTextField.resignFirstResponder()
-        if let bookmarkURL = UserDefaults.standard.vmFilesDirectory,
-           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
-        {
-            _ = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURL)            
-        }
+        startAccessToVMFilesDirectory()
         self.updateUI()
     }
     
@@ -206,13 +202,16 @@ final class MainViewController: NSViewController {
         {
             messageText = failureReason
             informativeText = reason + " " + underlyingError.localizedDescription + "\n\n(Error Code: \(vzError.errorCode), Underlying Error Domain: \(underlyingError.domain), Underlying Error Code: \(underlyingError.code))"
-            Logger.shared.log(level: .default, "vz error: \(messageText) \(informativeText)")
+        } else if let restoreError = error as? RestoreError {
+            informativeText = error.localizedDescription + " " + restoreError.localizedDescription
         } else {
             informativeText = error.localizedDescription
-            Logger.shared.log(level: .default, "error: \(error.localizedDescription)")
         }
 
+        Logger.shared.log(level: .default, "\(messageText) \(informativeText)")
         let alert = NSAlert.okCancelAlert(messageText: messageText, informativeText: informativeText, showCancelButton: false)
+        print("messageText: \(messageText)")
+        print("informativeText: \(informativeText)")
         let _ = alert.runModal()
     }
     
@@ -293,6 +292,18 @@ final class MainViewController: NSViewController {
             Logger.shared.log(level: .default, "show modal failed")
         }
     }
+    
+    fileprivate func startAccessToVMFilesDirectory() {
+        if let bookmarkURL = UserDefaults.standard.vmFilesDirectory?.removingPercentEncoding,
+           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+        {
+            if Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURL) == nil {
+                // previous vm file directory no longer exists, reset
+                UserDefaults.standard.resetVMFilesDirectory()
+            }
+        }
+    }
+
 }
 
 extension MainViewController: NSTableViewDelegate {

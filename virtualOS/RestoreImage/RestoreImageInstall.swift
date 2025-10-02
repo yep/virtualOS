@@ -13,10 +13,6 @@ import OSLog
 #if arch(arm64)
 
 final class RestoreImageInstall {
-    struct RestoreError: Error {
-        var localizedDescription = "Restore Error"
-    }
-    
     weak var delegate: ProgressDelegate?
     var restoreImageName: String?
     var diskImageSize: Int?
@@ -24,7 +20,7 @@ final class RestoreImageInstall {
     fileprivate var observation: NSKeyValueObservation?
     fileprivate var installing = true
     fileprivate var installer:  VZMacOSInstaller?
-    fileprivate let queue = DispatchQueue.global(qos: .userInteractive)
+    fileprivate let userInteractivQueue = DispatchQueue.global(qos: .userInteractive)
 
     deinit {
         observation?.invalidate()
@@ -33,7 +29,7 @@ final class RestoreImageInstall {
     func install() {
         let restoreImageURL: URL
         if let restoreImageName {
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
+            restoreImageURL = URL(fileURLWithPath: URL.baseURL.appendingPathComponent(restoreImageName).path())
         } else {
             restoreImageURL = URL.restoreImageURL
         }
@@ -54,8 +50,11 @@ final class RestoreImageInstall {
     // MARK: - Private
     
     fileprivate func loadParametersFromRestoreImage(restoreImageURL: URL?) {
-        let bundleURl = createBundleURL()
-        if let error = createBundle(at: bundleURl) {
+        guard let bundleURL = createBundleURL() else {
+            self.delegate?.done(error: RestoreError(localizedDescription: "Failed to create VM bundle."))
+            return
+        }
+        if let error = createBundle(at: bundleURL) {
             self.delegate?.done(error: error)
             return
         }
@@ -68,7 +67,7 @@ final class RestoreImageInstall {
         VZMacOSRestoreImage.load(from: restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
             case .success(let restoreImage):
-                self.startInstall(restoreImage: restoreImage, bundleURL: bundleURl)
+                self.startInstall(restoreImage: restoreImage, bundleURL: bundleURL)
             case .failure(let error):
                 self.delegate?.done(error: error)
             }
@@ -106,7 +105,7 @@ final class RestoreImageInstall {
             return
         }
 
-        let vm = VZVirtualMachine(configuration: vmConfiguration, queue: queue)
+        let vm = VZVirtualMachine(configuration: vmConfiguration, queue: userInteractivQueue)
         
         var restoreImageURL = URL.restoreImageURL
         if let restoreImageName {
@@ -114,7 +113,7 @@ final class RestoreImageInstall {
             restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
         }
         
-        queue.async { [weak self] in
+        userInteractivQueue.async { [weak self] in
             let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: restoreImageURL)
             self?.installer = installer
             
@@ -159,7 +158,7 @@ final class RestoreImageInstall {
     
     fileprivate func stopVM() {
         if let installer = installer {
-            queue.async {
+            userInteractivQueue.async {
                 if installer.virtualMachine.canStop {
                     installer.virtualMachine.stop(completionHandler: { error in
                         if let error {
@@ -173,63 +172,72 @@ final class RestoreImageInstall {
         }
     }
     
-    fileprivate func createBundleURL() -> URL {
-        var url = URL.vmBundleURL
+    fileprivate func createBundleURL() -> URL? {
+        var vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+        var vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
         
-        if let vmFilesDirectoryURL = UserDefaults.standard.vmFilesDirectory,
-           let vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData,
-           let bookmark = Bookmark.startAccess(bookmarkData: vmFilesDirectoryBookmarkData, for: vmFilesDirectoryURL)
-        {
-            url = bookmark.appending(path: URL.bundleName)
+        if vmFilesDirectoryString == nil || vmFilesDirectoryBookmarkData == nil {
+            // previous vm file directory no longer exists, reset
+            UserDefaults.standard.resetVMFilesDirectory()
+            vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+            vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
         }
-        print(url.absoluteString)
         
+        guard let vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory,
+              let vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData else
+        {
+            return nil // error
+        }
+
         // try to find a filename that does not exist
+        var url = URL(fileURLWithPath: vmFilesDirectoryString.appending(URL.bundleName))
         var exists = true
         var i = 1
         while exists {
-            var filename = url.lastPathComponent
-            filename = filename.replacingOccurrences(of: ".bundle", with: "")
-            let filenameComponents = filename.split(separator: "_")
-            if filenameComponents.count > 0 {
-                filename = String(filenameComponents[0])
-            }
-            filename += "_\(i).bundle"
-
-            url = URL(fileURLWithPath: url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path())
-
-            if FileManager.default.fileExists(atPath: url.path()) {
+            url = nextURL(url, i)
+            if FileManager.default.fileExists(atPath: url.path) {
                 i += 1
             } else {
                 exists = false
             }
         }
-        Logger.shared.log(level: .default, "using bundle url \(url.absoluteString)")
+        
+        if Bookmark.startAccess(bookmarkData: vmFilesDirectoryBookmarkData, for: url.path) == nil {
+            return nil // error
+        }
+        
+        Logger.shared.log(level: .default, "using bundle url \(url.path(percentEncoded: false))")
         return url
     }
     
-    fileprivate func createBundle(at bundleURl: URL) -> RestoreError? {
-        if FileManager.default.fileExists(atPath: bundleURl.path()) {
+    fileprivate func nextURL(_ url: URL, _ i: Int) -> URL {
+        var filename = url.lastPathComponent
+        filename = filename.replacingOccurrences(of: ".bundle", with: "")
+        
+        let filenameComponents = filename.split(separator: "_")
+        if filenameComponents.count > 0 {
+            filename = String(filenameComponents[0])
+        }
+        filename += "_\(i).bundle"
+        
+        let path = url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path
+        return URL(fileURLWithPath: path)
+    }
+
+    fileprivate func createBundle(at bundleURL: URL) -> RestoreError? {
+        if FileManager.default.fileExists(atPath: bundleURL.path) {
             return nil // already exists, no error
         }
-
-        let bundleFileDescriptor = mkdir(bundleURl.path(), S_IRWXU | S_IRWXG | S_IRWXO)
-        if bundleFileDescriptor == -1 {
-            var errorMessage = "Failed to create VM bundle at \(bundleURl.path()) (error number \(errno))."
-            if errno == EEXIST {
-                errorMessage += " The base directory already exists."
-            }
+        
+        do {
+            try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true, attributes: nil)
+        } catch let error {
+            let errorMessage = "Failed to create VM bundle: \(error.localizedDescription)"
             Logger.shared.log(level: .default, "\(errorMessage)")
             return RestoreError(localizedDescription: errorMessage)
         }
 
-        let result = close(bundleFileDescriptor)
-        if result != 0 {
-            let errorMessage = "warning: failed to close VM bundle at \(bundleURl.path()) (error number \(result))."
-            Logger.shared.log(level: .default, "\(errorMessage)")
-            return nil // no error
-        }
-
+        // Logger.shared.log(level: .default, "bundle created at \(bundleURL.path)")
         return nil // no error
     }
     
@@ -255,7 +263,6 @@ final class RestoreImageInstall {
 
         return false // failure
     }
-
 }
 
 #endif

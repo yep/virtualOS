@@ -18,7 +18,8 @@ final class RestoreImageViewController: NSViewController {
 
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var installButton: NSButton!
-    @IBOutlet weak var infoTextField: NSTextField!
+    @IBOutlet weak var showInFinderButton: NSButton!
+    @IBOutlet weak var infoTextField: NSTextField!    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,9 +32,9 @@ final class RestoreImageViewController: NSViewController {
         tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
         updateInfoLabel()
         if tableView.numberOfRows > 0 {
-            installButton.isEnabled = true
+            setButtons(enabled: true)
         } else {
-            installButton.isEnabled = false
+            setButtons(enabled: false)
         }
     }
     
@@ -45,10 +46,16 @@ final class RestoreImageViewController: NSViewController {
         }
     }
     
-    @IBAction func downloadLatestButtonPressed(_ sender: Any) {
+    @IBAction func showInFinderButtonPressed(_ sender: NSButton) {
+        if tableView.selectedRow != -1 {
+            let url = URL.baseURL.appendingPathComponent(self.selectedRestoreImage)
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        }
+    }
+    
+    @IBAction func downloadLatestButtonPressed(_ sender: NSButton) {
         let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImage: Constants.restoreImageNameLatest])
         NotificationCenter.default.post(notification)
-
         view.window?.close()
     }
     
@@ -71,6 +78,11 @@ final class RestoreImageViewController: NSViewController {
         } else {
             infoTextField.stringValue = ""
         }
+    }
+    
+    fileprivate func setButtons(enabled: Bool) {
+        installButton.isEnabled      = enabled
+        showInFinderButton.isEnabled = enabled
     }
 }
 
@@ -96,9 +108,9 @@ extension RestoreImageViewController: NSTableViewDelegate {
         let selectedRow = tableView.selectedRow
         if selectedRow != -1 && selectedRow < restoreImages.count {
             selectedRestoreImage = restoreImages[selectedRow]
-            installButton.isEnabled = true
+            setButtons(enabled: true)
         } else {
-            installButton.isEnabled = false
+            setButtons(enabled: false)
         }
         updateInfoLabel()
     }
