@@ -46,9 +46,10 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     fileprivate func sharedFolderInfo(vmParameters: VMParameters) -> String {
         if let sharedFolderURL = vmParameters.sharedFolderURL,
            let sharedFolderData = vmParameters.sharedFolderData,
-           let bookmarkURL = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderURL.absoluteString)
+           let bookmarkURL = Bookmark.startAccess(bookmarkData: sharedFolderData, for: sharedFolderURL.path),
+           let bookmarkPath = bookmarkURL.path.removingPercentEncoding
         {
-            return bookmarkURL.path()
+            return bookmarkPath
         }
         return "No shared folder"
     }

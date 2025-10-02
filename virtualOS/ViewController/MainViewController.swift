@@ -58,9 +58,10 @@ final class MainViewController: NSViewController {
         view.window?.delegate = self
         vmNameTextField.resignFirstResponder()
         if let bookmarkURL = UserDefaults.standard.vmFilesDirectory,
-           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData,
+           let bookmarkURLWithPercentEncoding = bookmarkURL.removingPercentEncoding
         {
-            _ = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURL)            
+            _ = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURLWithPercentEncoding)            
         }
         self.updateUI()
     }
@@ -206,13 +207,16 @@ final class MainViewController: NSViewController {
         {
             messageText = failureReason
             informativeText = reason + " " + underlyingError.localizedDescription + "\n\n(Error Code: \(vzError.errorCode), Underlying Error Domain: \(underlyingError.domain), Underlying Error Code: \(underlyingError.code))"
-            Logger.shared.log(level: .default, "vz error: \(messageText) \(informativeText)")
+        } else if let restoreError = error as? RestoreError {
+            informativeText = error.localizedDescription + " " + restoreError.localizedDescription
         } else {
             informativeText = error.localizedDescription
-            Logger.shared.log(level: .default, "error: \(error.localizedDescription)")
         }
 
+        Logger.shared.log(level: .default, "\(messageText) \(informativeText)")
         let alert = NSAlert.okCancelAlert(messageText: messageText, informativeText: informativeText, showCancelButton: false)
+        print("messageText: \(messageText)")
+        print("informativeText: \(informativeText)")
         let _ = alert.runModal()
     }
     

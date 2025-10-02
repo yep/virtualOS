@@ -21,23 +21,23 @@ struct Bookmark {
         return nil
     }
     
-    static func startAccess(bookmarkData: Data?, for absoluteURL: String) -> URL? {
+    static func startAccess(bookmarkData: Data?, for path: String) -> URL? {
         var bookmarkDataIsStale = false
         if let bookmarkData = bookmarkData,
            let bookmarkURL = try? URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale),
            !bookmarkDataIsStale
         {
             // stop accessing previous resource
-            if let previousURL = accessedURLs[absoluteURL],
+            if let previousURL = accessedURLs[path],
                previousURL != bookmarkURL
             {
                 previousURL.stopAccessingSecurityScopedResource()
             }
             
-            if accessedURLs[absoluteURL] != bookmarkURL {
+            if accessedURLs[path] != bookmarkURL {
                 // resource not already accessed, start access
                 _ = bookmarkURL.startAccessingSecurityScopedResource()
-                accessedURLs[absoluteURL] = bookmarkURL
+                accessedURLs[path] = bookmarkURL
             }
             return bookmarkURL
         }
@@ -47,7 +47,7 @@ struct Bookmark {
     
     static func stopAccess(url: URL) {
         url.stopAccessingSecurityScopedResource()
-        Self.accessedURLs[url.absoluteString] = nil
+        Self.accessedURLs[url.path] = nil
     }
     
     static func stopAllAccess() {

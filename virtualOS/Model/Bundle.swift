@@ -10,7 +10,7 @@ import Foundation
 
 struct VMBundle: Identifiable, Hashable {
     var id: String {
-        return url.absoluteString
+        return url.path
     }
     var url: URL
     var name: String {

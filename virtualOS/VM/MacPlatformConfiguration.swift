@@ -83,12 +83,12 @@ final class MacPlatformConfiguration: VZMacPlatformConfiguration {
     fileprivate func createPlatformConfiguration(macHardwareModel: VZMacHardwareModel, bundleURL: URL) -> VZMacPlatformConfiguration? {
         let platformConfiguration = VZMacPlatformConfiguration()
         platformConfiguration.hardwareModel = macHardwareModel
-
+        
         do {
             platformConfiguration.auxiliaryStorage = try VZMacAuxiliaryStorage(creatingStorageAt: bundleURL.auxiliaryStorageURL, hardwareModel: macHardwareModel, options: [.allowOverwrite]
             )
-        } catch {
-            Logger.shared.log(level: .default, "Error: could not create auxiliary storage device")
+        } catch let error {
+            Logger.shared.log(level: .default, "Error: could not create auxiliary storage device: \(error)")
             return nil
         }
 

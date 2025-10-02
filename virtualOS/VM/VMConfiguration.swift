@@ -112,7 +112,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
 
     fileprivate func configureSharedFolder(parameters: VMParameters) {
         guard let sharedFolderURL = parameters.sharedFolderURL,
-              let sharedFolderBookmarkData = Bookmark.startAccess(bookmarkData: parameters.sharedFolderData, for: sharedFolderURL.absoluteString) else
+              let sharedFolderBookmarkData = Bookmark.startAccess(bookmarkData: parameters.sharedFolderData, for: sharedFolderURL.path) else
         {
             return
         }
