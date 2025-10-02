@@ -223,6 +223,8 @@ final class MainViewController: NSViewController {
 
         Logger.shared.log(level: .default, "\(messageText) \(informativeText)")
         let alert = NSAlert.okCancelAlert(messageText: messageText, informativeText: informativeText, showCancelButton: false)
+        print("messageText: \(messageText)")
+        print("informativeText: \(informativeText)")
         let _ = alert.runModal()
     }
     
