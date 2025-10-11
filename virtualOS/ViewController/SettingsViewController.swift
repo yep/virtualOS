@@ -12,6 +12,10 @@ import OSLog
 final class SettingsViewController: NSViewController {
     @IBOutlet weak var vmFilesURLLabel: NSTextField!
     
+    override func viewWillAppear() {
+        updateVMFilesLabel()
+    }
+
     @IBAction func selectFolderButtonPressed(_ sender: Any) {
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = false
@@ -53,13 +57,10 @@ final class SettingsViewController: NSViewController {
         }
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
-
-    override func viewWillAppear() {
-        updateVMFilesLabel()
-    }
     
     fileprivate func updateVMFilesLabel() {
-        vmFilesURLLabel.stringValue = "Storing VM files at:\n\(UserDefaults.standard.vmFilesDirectory ?? URL.basePath)"
+        let vmFilesDirectory = FileModel.createVMFilesDirectory()
+        vmFilesURLLabel.stringValue = "Storing VM files at:\n\(vmFilesDirectory.path)"
     }
     
     fileprivate func postNotification() {

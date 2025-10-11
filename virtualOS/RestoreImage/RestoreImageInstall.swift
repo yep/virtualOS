@@ -190,7 +190,7 @@ final class RestoreImageInstall {
         }
 
         // try to find a filename that does not exist
-        var url = URL(fileURLWithPath: vmFilesDirectoryString.appending(URL.bundleName))
+        var url = URL(fileURLWithPath: vmFilesDirectoryString.appending("/" + URL.bundleName))
         var exists = true
         var i = 1
         while exists {

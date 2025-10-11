@@ -9,18 +9,12 @@
 import Foundation
 
 struct FileModel {
-    var restoreImageExists: Bool {
-        return FileManager.default.fileExists(atPath: URL.restoreImageURL.path)
-    }
-
     func getVMBundles() -> [VMBundle] {
         var result: [VMBundle] = []
-        var hardDiskDirectoryURL: URL
+        var hardDiskDirectoryURL = URL.baseURL
         
         if let hardDiskDirectoryPath = UserDefaults.standard.vmFilesDirectory as String? {
             hardDiskDirectoryURL = URL(fileURLWithPath: hardDiskDirectoryPath)
-        } else {
-            hardDiskDirectoryURL = URL.baseURL
         }
          
         if let urls = try? FileManager.default.contentsOfDirectory(at: hardDiskDirectoryURL, includingPropertiesForKeys: nil, options: [])
@@ -36,14 +30,30 @@ struct FileModel {
     
     func getRestoreImages() -> [String] {
         var result: [String] = []
-        if let urls = try? FileManager.default.contentsOfDirectory(at: URL.baseURL, includingPropertiesForKeys: nil, options: []) {
+        let vmFilesDirectory = FileModel.createVMFilesDirectory()
+                
+        if let urls = try? FileManager.default.contentsOfDirectory(at: vmFilesDirectory, includingPropertiesForKeys: nil, options: []) {
             for url in urls {
                 if url.lastPathComponent.hasSuffix("ipsw") {
                     result.append(url.lastPathComponent)
                 }
             }
         }
+        
         return result
     }
-
+    
+    static func createVMFilesDirectory() -> URL {
+        var url = URL.baseURL
+        
+        if let vmFilesDirectory = UserDefaults.standard.vmFilesDirectory {
+            url = URL(fileURLWithPath: vmFilesDirectory)
+        }
+        
+        if !FileManager.default.fileExists(atPath: url.path) {
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        }
+        
+        return url
+    }
 }

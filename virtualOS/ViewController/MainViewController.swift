@@ -62,28 +62,27 @@ final class MainViewController: NSViewController {
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
-           let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
+        if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
         {
             vmViewController.vmBundle = viewModel.vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
-            windowController.showWindow(self)
-            windowController.contentViewController = vmViewController
+            
+            let newWindow = NSWindow(contentViewController: vmViewController)
+            newWindow.title = viewModel.vmBundle?.name ?? "virtualOS VM"
+            newWindow.makeKeyAndOrderFront(nil)
         } else {
             Logger.shared.log(level: .default, "show vm window failed")
         }
     }
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
-        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
-           let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
+        if let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
         {
-            windowController.showWindow(self)
-            windowController.contentViewController = restoreImageViewController
-            if let parentFrame = view.window?.frame,
-               let childWindow = restoreImageViewController.view.window
-            {
-                childWindow.setFrame(parentFrame.offsetBy(dx: 200, dy: 10), display: true)
+            let newWindow = NSWindow(contentViewController: restoreImageViewController)
+            newWindow.title = "Restore Image"
+            newWindow.makeKeyAndOrderFront(nil)
+            if let parentFrame = view.window?.frame {
+                newWindow.setFrame(parentFrame.offsetBy(dx: 50, dy: -10), display: true)
             }
         } else {
             Logger.shared.log(level: .default, "show restore image window failed")
@@ -182,7 +181,7 @@ final class MainViewController: NSViewController {
                 updateRam(vmParameters)
             }
         } else {
-            vmNameTextField.stringValue = ""
+            vmNameTextField.stringValue = "No virtual machine available. Press install to add one."
             viewModel.selectedRow = 0
             updateButtons(enabled: false)
             updateLabels(setZero: true)

@@ -41,8 +41,8 @@ final class RestoreImageViewController: NSViewController {
     @IBAction func installButtonPressed(_ sender: NSButton) {
         if tableView.selectedRow != -1 {
             let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImage: self.selectedRestoreImage])
-                NotificationCenter.default.post(notification)
-                view.window?.close()
+            NotificationCenter.default.post(notification)
+            view.window?.close()
         }
     }
     
@@ -60,7 +60,10 @@ final class RestoreImageViewController: NSViewController {
     }
     
     fileprivate func updateInfoLabel() {
-        if tableView.selectedRow < fileModel.getRestoreImages().count &&
+        let restoreImageCount = fileModel.getRestoreImages().count
+        if restoreImageCount == 0 {
+            infoTextField.stringValue = "No restore image available, download latest image."
+        } else if tableView.selectedRow < restoreImageCount &&
             tableView.selectedRow != -1
         {
             let name = fileModel.getRestoreImages()[tableView.selectedRow]
