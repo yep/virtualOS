@@ -27,6 +27,9 @@ final class MainViewController: NSViewController {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
     fileprivate var diskImageSize = 1
+    fileprivate var windowController: WindowController? {
+        return view.window?.windowController as? WindowController
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,17 +51,20 @@ final class MainViewController: NSViewController {
         cpuCountSlider.target = self
         cpuCountSlider.action = #selector(cpuCountChanged(sender:))
     }
-
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
     
     override func viewWillAppear() {
         super.viewWillAppear()
+        
         view.window?.delegate = self
+        windowController?.mainViewController = self
         vmNameTextField.resignFirstResponder()
         startAccessToVMFilesDirectory()
-        self.updateUI()
+        FileModel.cleanUpTemporaryFiles()
+        updateUI()
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
@@ -113,6 +119,7 @@ final class MainViewController: NSViewController {
         openPanel.canChooseDirectories = true
         openPanel.canChooseFiles = false
         openPanel.prompt = "Select"
+        openPanel.message = "Select a folder to share with the VM"
         let modalResponse = openPanel.runModal()
         var sharedFolderURL: URL?
         if modalResponse == .OK,
@@ -163,8 +170,13 @@ final class MainViewController: NSViewController {
         
     @objc func updateUI() {
         self.tableView.reloadData()
-        cpuCountSlider.isEnabled = false
-        ramSlider.isEnabled = false
+        
+        if let selectedRow = viewModel.selectedRow,
+           selectedRow < 0,
+           viewModel.tableViewDataSource.numberOfRows(in: tableView) > 0
+        {
+            viewModel.selectedRow = 0 // one or more vms available, select first
+        }
         
         if let selectedRow = viewModel.selectedRow,
            let vmBundle = viewModel.tableViewDataSource.vmBundle(forRow: selectedRow)
@@ -175,16 +187,16 @@ final class MainViewController: NSViewController {
             if let vmParameters = VMParameters.readFrom(url: vmBundle.url) {
                 viewModel.vmParameters = vmParameters
                 viewModel.textFieldDelegate.vmBundle = vmBundle
-                updateButtons(enabled: true)
                 updateLabels(setZero: false)
                 updateCpuCount(vmParameters)
                 updateRam(vmParameters)
+                updateEnabledState(enabled: true)
             }
         } else {
             vmNameTextField.stringValue = "No virtual machine available. Press install to add one."
-            viewModel.selectedRow = 0
-            updateButtons(enabled: false)
+            viewModel.vmParameters = nil
             updateLabels(setZero: true)
+            updateEnabledState(enabled: false)
         }
 
         updateOutlineView()
@@ -201,6 +213,9 @@ final class MainViewController: NSViewController {
         {
             messageText = failureReason
             informativeText = reason + " " + underlyingError.localizedDescription + "\n\n(Error Code: \(vzError.errorCode), Underlying Error Domain: \(underlyingError.domain), Underlying Error Code: \(underlyingError.code))"
+            if vzError.errorCode == 10007 && underlyingError.code == 3004 {
+                informativeText += "\n\nYou have to be connected to the internet to start the install."
+            }
         } else if let restoreError = error as? RestoreError {
             informativeText = error.localizedDescription + " " + restoreError.localizedDescription
         } else {
@@ -209,20 +224,18 @@ final class MainViewController: NSViewController {
 
         Logger.shared.log(level: .default, "\(messageText) \(informativeText)")
         let alert = NSAlert.okCancelAlert(messageText: messageText, informativeText: informativeText, showCancelButton: false)
-        print("messageText: \(messageText)")
-        print("informativeText: \(informativeText)")
         let _ = alert.runModal()
     }
     
     // MARK: - Private
-
-    fileprivate func updateButtons(enabled: Bool) {
-        startButton.isEnabled = enabled
-        sharedFolderButton.isEnabled = enabled
-        deleteButton.isEnabled = enabled
-        vmNameTextField.isEnabled = enabled
-    }
     
+    fileprivate func updateEnabledState(enabled: Bool) {
+        ramSlider.isEnabled       = enabled
+        cpuCountSlider.isEnabled  = enabled
+        vmNameTextField.isEnabled = enabled
+        windowController?.updateButtons(hidden: !enabled)
+    }
+
     fileprivate func updateCpuCount(_ vmParameters: VMParameters) {
         cpuCountSlider.minValue = Double(vmParameters.cpuCountMin)
         cpuCountSlider.maxValue = Double(vmParameters.cpuCountMax)
@@ -262,19 +275,6 @@ final class MainViewController: NSViewController {
         viewModel.storeParametersToDisk()
         updateLabels(setZero: false)
         updateOutlineView()
-    }
-    
-    fileprivate func updateButtonEnabledState() {
-        var enabled = false
-        if viewModel.selectedRow != nil {
-            enabled = true
-        }
-        vmNameTextField.isEnabled    = enabled
-        startButton.isEnabled        = enabled
-        sharedFolderButton.isEnabled = enabled
-        deleteButton.isEnabled       = enabled
-        ramSlider.isEnabled          = enabled
-        cpuCountSlider.isEnabled     = enabled
     }
 
     fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
@@ -319,7 +319,6 @@ extension MainViewController: NSTableViewDelegate {
         if let row  = row {
             viewModel.selectedRow = row
             updateUI()
-            updateButtonEnabledState()
         }
     }
 }

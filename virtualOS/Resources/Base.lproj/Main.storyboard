@@ -687,18 +687,53 @@
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
-                <windowController storyboardIdentifier="NSWindowController" id="B8D-0N-5wS" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="NSWindowController" id="B8D-0N-5wS" customClass="WindowController" customModule="virtualOS" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="virtualOS" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="196" y="240" width="480" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
                         <value key="minSize" type="size" width="480" height="270"/>
+                        <toolbar key="toolbar" implicitIdentifier="AAF9F47E-9C2A-49F9-870B-BC108C873FC9" autosavesConfiguration="NO" showsBaselineSeparator="NO" displayMode="iconAndLabel" sizeMode="regular" id="GnQ-bY-j2A">
+                            <allowedToolbarItems>
+                                <toolbarItem implicitItemIdentifier="B3D75A3A-67E9-4A53-873A-B6FA5EA12CD6" label="Install" paletteLabel="Install" tag="-1" image="NSAddTemplate" bordered="YES" sizingBehavior="auto" id="HpN-ir-lqa">
+                                    <connections>
+                                        <action selector="installButtonPressed:" target="B8D-0N-5wS" id="e5I-Ng-AYZ"/>
+                                    </connections>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="2397A608-CB27-43F9-BE18-6FCC698DF1D1" label="Start" paletteLabel="Start" tag="-1" image="play.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="Kl1-X8-kZg">
+                                    <connections>
+                                        <action selector="startButtonPressed:" target="B8D-0N-5wS" id="c7s-6L-Zh9"/>
+                                    </connections>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="16778FC5-EB90-4C43-88F6-C21387E4D67B" label="Shared" paletteLabel="Shared" tag="-1" image="folder.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="1hf-o8-tzI">
+                                    <connections>
+                                        <action selector="sharedFolderButtonPressed:" target="B8D-0N-5wS" id="Trt-M7-QN5"/>
+                                    </connections>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="0AF8CAF5-8139-4EB7-9BFA-EB7CAB4188A4" label="Delete" paletteLabel="Delete" tag="-1" image="trash.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="hUN-Jb-XXK">
+                                    <connections>
+                                        <action selector="deleteButtonPressed:" target="B8D-0N-5wS" id="kiE-Ks-coH"/>
+                                    </connections>
+                                </toolbarItem>
+                            </allowedToolbarItems>
+                            <defaultToolbarItems>
+                                <toolbarItem reference="HpN-ir-lqa"/>
+                                <toolbarItem reference="Kl1-X8-kZg"/>
+                                <toolbarItem reference="1hf-o8-tzI"/>
+                                <toolbarItem reference="hUN-Jb-XXK"/>
+                            </defaultToolbarItems>
+                        </toolbar>
                         <connections>
                             <outlet property="delegate" destination="B8D-0N-5wS" id="98r-iN-zZc"/>
                         </connections>
                     </window>
                     <connections>
+                        <outlet property="deleteButton" destination="hUN-Jb-XXK" id="Tc1-4L-9nd"/>
+                        <outlet property="installButton" destination="HpN-ir-lqa" id="xHT-JS-Ga7"/>
+                        <outlet property="sharedFolderButton" destination="1hf-o8-tzI" id="gcK-aZ-i4a"/>
+                        <outlet property="startButton" destination="Kl1-X8-kZg" id="VWd-El-Ei5"/>
+                        <outlet property="toolbar" destination="GnQ-bY-j2A" id="Uh1-km-Pkl"/>
                         <segue destination="XfG-lQ-9wD" kind="relationship" relationship="window.shadowedContentViewController" id="cq2-FE-JQM"/>
                     </connections>
                 </windowController>
@@ -711,17 +746,17 @@
             <objects>
                 <viewController title="virtualOS" storyboardIdentifier="MainViewController" id="XfG-lQ-9wD" customClass="MainViewController" customModule="virtualOS" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="644" height="318"/>
+                        <rect key="frame" x="0.0" y="0.0" width="644" height="290"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView focusRingType="none" autohidesScrollers="YES" horizontalLineScroll="27" horizontalPageScroll="10" verticalLineScroll="27" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bLz-9W-E0Q">
-                                <rect key="frame" x="20" y="20" width="214" height="278"/>
+                                <rect key="frame" x="20" y="20" width="214" height="250"/>
                                 <clipView key="contentView" focusRingType="none" id="dRS-R9-JhK">
-                                    <rect key="frame" x="1" y="1" width="212" height="276"/>
+                                    <rect key="frame" x="1" y="1" width="212" height="248"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="none" tableStyle="plain" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="18" id="SLV-LP-8yS">
-                                            <rect key="frame" x="0.0" y="0.0" width="212" height="276"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="212" height="248"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="17" height="9"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -756,13 +791,13 @@
                                 </scroller>
                             </scrollView>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xYa-aB-2n1">
-                                <rect key="frame" x="238" y="20" width="386" height="150"/>
+                                <rect key="frame" x="238" y="20" width="386" height="160"/>
                                 <clipView key="contentView" id="NKO-Vj-ex1">
-                                    <rect key="frame" x="1" y="1" width="384" height="148"/>
+                                    <rect key="frame" x="1" y="1" width="384" height="158"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" headerView="Up0-CN-Hwh" viewBased="YES" indentationPerLevel="13" outlineTableColumn="twK-Ii-IWq" id="FAz-DU-FNt">
-                                            <rect key="frame" x="0.0" y="0.0" width="384" height="120"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="384" height="130"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="17" height="0.0"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -848,7 +883,7 @@
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="150" id="HlI-kp-iqx"/>
                                 </constraints>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Teu-XY-Qhj">
-                                    <rect key="frame" x="1" y="134" width="384" height="17"/>
+                                    <rect key="frame" x="1" y="170" width="384" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="cyE-aw-R3w">
@@ -861,7 +896,7 @@
                                 </tableHeaderView>
                             </scrollView>
                             <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2ay-GK-UXb">
-                                <rect key="frame" x="238" y="274" width="386" height="24"/>
+                                <rect key="frame" x="238" y="246" width="386" height="24"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="380" id="2NP-zs-Qjw"/>
                                 </constraints>
@@ -871,63 +906,20 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dgL-g1-a12">
-                                <rect key="frame" x="245" y="240" width="60" height="24"/>
-                                <buttonCell key="cell" type="push" title="Install" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="gZ7-2O-NZX">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="installButtonPressed:" target="XfG-lQ-9wD" id="TV7-LR-FGt"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="u4y-Sa-Bdd">
-                                <rect key="frame" x="317" y="240" width="54" height="24"/>
-                                <buttonCell key="cell" type="push" title="Start" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="y3q-7I-SOg">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="startButtonPressed:" target="XfG-lQ-9wD" id="8Tw-w9-NW7"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KLm-8y-FhL">
-                                <rect key="frame" x="383" y="240" width="109" height="24"/>
-                                <buttonCell key="cell" type="push" title="Shared Folder" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="x0Z-WL-Lbw">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="sharedFolderButtonPressed:" target="XfG-lQ-9wD" id="Y1r-b3-eYi"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9MR-WB-yVe">
-                                <rect key="frame" x="504" y="240" width="63" height="24"/>
-                                <buttonCell key="cell" type="push" title="Delete" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="XSj-Ge-squ">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <constraints>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="60" id="EIL-dx-RyQ"/>
-                                </constraints>
-                                <connections>
-                                    <action selector="deleteButtonPressed:" target="XfG-lQ-9wD" id="dRC-aQ-I2u"/>
-                                </connections>
-                            </button>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aid-tx-60f">
-                                <rect key="frame" x="344" y="212" width="280" height="16"/>
+                                <rect key="frame" x="344" y="222" width="280" height="16"/>
                                 <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" allowsTickMarkValuesOnly="YES" sliderType="linear" id="dGd-mC-Nbm">
                                     <font key="font" size="12" name="Helvetica"/>
                                 </sliderCell>
                             </slider>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vjp-OJ-ccY">
-                                <rect key="frame" x="344" y="188" width="280" height="16"/>
+                                <rect key="frame" x="344" y="198" width="280" height="16"/>
                                 <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" allowsTickMarkValuesOnly="YES" sliderType="linear" id="cKs-Fo-lSs">
                                     <font key="font" size="12" name="Helvetica"/>
                                 </sliderCell>
                             </slider>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="oMc-Ex-Id4">
-                                <rect key="frame" x="236" y="211" width="102" height="16"/>
+                                <rect key="frame" x="236" y="221" width="102" height="16"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="98" id="iSa-om-WSH"/>
                                 </constraints>
@@ -938,7 +930,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BnL-6C-wN5">
-                                <rect key="frame" x="236" y="184" width="102" height="16"/>
+                                <rect key="frame" x="236" y="194" width="102" height="16"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="98" id="Fbl-aQ-uRR"/>
                                 </constraints>
@@ -952,46 +944,33 @@
                         <constraints>
                             <constraint firstItem="vjp-OJ-ccY" firstAttribute="top" secondItem="aid-tx-60f" secondAttribute="bottom" constant="8" symbolic="YES" id="2Br-Vf-Hgs"/>
                             <constraint firstItem="bLz-9W-E0Q" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="59D-Tw-8S0"/>
-                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="9MR-WB-yVe" secondAttribute="trailing" constant="20" symbolic="YES" id="AXx-HM-fTY"/>
                             <constraint firstItem="BnL-6C-wN5" firstAttribute="top" secondItem="oMc-Ex-Id4" secondAttribute="bottom" constant="11" id="Cee-kV-8AV"/>
-                            <constraint firstItem="u4y-Sa-Bdd" firstAttribute="leading" secondItem="dgL-g1-a12" secondAttribute="trailing" constant="12" symbolic="YES" id="EDD-Eh-n7L"/>
                             <constraint firstAttribute="trailing" secondItem="aid-tx-60f" secondAttribute="trailing" constant="20" symbolic="YES" id="FwA-Kn-sfo"/>
                             <constraint firstItem="2ay-GK-UXb" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="HZG-ZK-k6X"/>
+                            <constraint firstItem="aid-tx-60f" firstAttribute="top" secondItem="2ay-GK-UXb" secondAttribute="bottom" constant="8" symbolic="YES" id="Hd4-uS-bSq"/>
                             <constraint firstItem="BnL-6C-wN5" firstAttribute="leading" secondItem="SLV-LP-8yS" secondAttribute="trailing" constant="5" id="Hhs-Zu-Tqf"/>
                             <constraint firstItem="2ay-GK-UXb" firstAttribute="leading" secondItem="SLV-LP-8yS" secondAttribute="trailing" constant="5" id="IBL-w0-c2S"/>
                             <constraint firstItem="bLz-9W-E0Q" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="KWQ-fQ-SLQ"/>
                             <constraint firstItem="vjp-OJ-ccY" firstAttribute="leading" secondItem="BnL-6C-wN5" secondAttribute="trailing" constant="8" symbolic="YES" id="Q9m-il-3Zc"/>
                             <constraint firstAttribute="trailing" secondItem="2ay-GK-UXb" secondAttribute="trailing" constant="20" symbolic="YES" id="S4Y-p5-A3O"/>
-                            <constraint firstItem="aid-tx-60f" firstAttribute="top" secondItem="KLm-8y-FhL" secondAttribute="bottom" constant="12" id="S93-Ln-d7I"/>
                             <constraint firstItem="xYa-aB-2n1" firstAttribute="top" secondItem="BnL-6C-wN5" secondAttribute="bottom" constant="14" id="SdI-LZ-S2P"/>
                             <constraint firstItem="oMc-Ex-Id4" firstAttribute="leading" secondItem="SLV-LP-8yS" secondAttribute="trailing" constant="5" id="UQ1-Ca-uCx"/>
-                            <constraint firstItem="u4y-Sa-Bdd" firstAttribute="top" secondItem="2ay-GK-UXb" secondAttribute="bottom" constant="10" id="Vwb-4c-XmI"/>
                             <constraint firstItem="bLz-9W-E0Q" firstAttribute="width" secondItem="2ay-GK-UXb" secondAttribute="height" multiplier="187:21" id="XkA-tb-7EO"/>
                             <constraint firstAttribute="trailing" secondItem="xYa-aB-2n1" secondAttribute="trailing" constant="20" symbolic="YES" id="YaT-Pz-lnl"/>
-                            <constraint firstItem="KLm-8y-FhL" firstAttribute="leading" secondItem="u4y-Sa-Bdd" secondAttribute="trailing" constant="12" symbolic="YES" id="esD-dz-Zsx"/>
                             <constraint firstAttribute="trailing" secondItem="vjp-OJ-ccY" secondAttribute="trailing" constant="20" symbolic="YES" id="fnq-Ye-IrA"/>
-                            <constraint firstItem="dgL-g1-a12" firstAttribute="leading" secondItem="bLz-9W-E0Q" secondAttribute="trailing" constant="11" id="hFO-G9-GHt"/>
                             <constraint firstAttribute="bottom" secondItem="bLz-9W-E0Q" secondAttribute="bottom" constant="20" symbolic="YES" id="mEf-HR-tGY"/>
                             <constraint firstItem="xYa-aB-2n1" firstAttribute="leading" secondItem="SLV-LP-8yS" secondAttribute="trailing" constant="5" id="p59-gV-lo4"/>
-                            <constraint firstItem="9MR-WB-yVe" firstAttribute="top" secondItem="2ay-GK-UXb" secondAttribute="bottom" constant="10" id="qBO-kc-qv5"/>
-                            <constraint firstItem="KLm-8y-FhL" firstAttribute="top" secondItem="2ay-GK-UXb" secondAttribute="bottom" constant="10" id="swP-03-Cyg"/>
-                            <constraint firstItem="dgL-g1-a12" firstAttribute="top" secondItem="2ay-GK-UXb" secondAttribute="bottom" constant="10" id="tMA-ob-DpS"/>
                             <constraint firstAttribute="bottom" secondItem="xYa-aB-2n1" secondAttribute="bottom" constant="20" symbolic="YES" id="uM4-MH-Ha4"/>
                             <constraint firstItem="oMc-Ex-Id4" firstAttribute="top" secondItem="aid-tx-60f" secondAttribute="top" constant="1" id="ve4-3k-h9o"/>
                             <constraint firstItem="aid-tx-60f" firstAttribute="leading" secondItem="oMc-Ex-Id4" secondAttribute="trailing" constant="8" symbolic="YES" id="vug-C1-93C"/>
-                            <constraint firstItem="9MR-WB-yVe" firstAttribute="leading" secondItem="KLm-8y-FhL" secondAttribute="trailing" constant="12" symbolic="YES" id="y5W-ob-nch"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="cpuCountLabel" destination="oMc-Ex-Id4" id="PMN-cw-wug"/>
                         <outlet property="cpuCountSlider" destination="aid-tx-60f" id="6ke-q0-mFp"/>
-                        <outlet property="deleteButton" destination="9MR-WB-yVe" id="XLu-bX-R9s"/>
-                        <outlet property="installButton" destination="dgL-g1-a12" id="AiL-UA-IL1"/>
                         <outlet property="parameterOutlineView" destination="FAz-DU-FNt" id="PLq-a8-6EM"/>
                         <outlet property="ramLabel" destination="BnL-6C-wN5" id="4Bf-ty-vRr"/>
                         <outlet property="ramSlider" destination="vjp-OJ-ccY" id="DD5-nf-ntM"/>
-                        <outlet property="sharedFolderButton" destination="KLm-8y-FhL" id="A9w-dC-XJ2"/>
-                        <outlet property="startButton" destination="u4y-Sa-Bdd" id="x4d-OP-1to"/>
                         <outlet property="tableView" destination="SLV-LP-8yS" id="BM3-w4-zbh"/>
                         <outlet property="vmNameTextField" destination="2ay-GK-UXb" id="J3n-oy-QZX"/>
                     </connections>
@@ -1082,7 +1061,7 @@
                 </viewController>
                 <customObject id="jSA-fl-LXp" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="812.5" y="145"/>
+            <point key="canvasLocation" x="813" y="159"/>
         </scene>
         <!--VM View-->
         <scene sceneID="7wI-8z-dsV">
@@ -1144,7 +1123,7 @@
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn identifier="AutomaticTableColumnIdentifier.0" editable="NO" width="213" minWidth="40" maxWidth="1000" id="s9t-lj-rTo">
+                                                <tableColumn identifier="AutomaticTableColumnIdentifier.0" editable="NO" width="304" minWidth="40" maxWidth="1000" id="s9t-lj-rTo">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -1340,4 +1319,10 @@ Gw
             <point key="canvasLocation" x="1166" y="603"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="NSAddTemplate" width="18" height="17"/>
+        <image name="folder.fill" catalog="system" width="18" height="14"/>
+        <image name="play.fill" catalog="system" width="12" height="13"/>
+        <image name="trash.fill" catalog="system" width="15" height="17"/>
+    </resources>
 </document>

@@ -91,6 +91,8 @@ extension ProgressViewController: ProgressDelegate {
         DispatchQueue.main.async { [weak self] in
             if let mainViewController = self?.presentingViewController as? MainViewController {
                 mainViewController.dismiss(self)
+                mainViewController.updateUI()
+                
                 if let error = error {
                     mainViewController.showErrorAlert(error: error)
                     self?.statusTextField.stringValue = "Install Failed."
