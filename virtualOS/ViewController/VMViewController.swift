@@ -44,32 +44,42 @@ final class VMViewController: NSViewController {
     
     fileprivate func createVM() {
         guard let bundleURL = vmBundle?.url,
-              let vmParameters = vmParameters,
-              let macPlatformConfiguration = MacPlatformConfiguration.read(fromBundleURL: bundleURL) else
+              let vmParameters = vmParameters else
         {
-            Logger.shared.log(level: .default, "could not create vm config")
+            Logger.shared.log(level: .default, "bundle url or vm parameters invalid")
             return
         }
         
-        let vmConfiguration = VMConfiguration()
-        vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
-        self.vmConfiguration = vmConfiguration
-        
-        do {
-            try vmConfiguration.validate()
-            Logger.shared.log(level: .default, "vm configuration is valid, using \(vmParameters.cpuCount) cpus and \(vmParameters.memorySizeInGB) gb ram")
-        } catch let error {
-            Logger.shared.log(level: .default, "failed to validate vm configuration: \(error.localizedDescription)")
+        let macPlatformConfigurationResult = MacPlatformConfiguration.read(fromBundleURL: bundleURL)
+        if case .failure(let restoreError) = macPlatformConfigurationResult {
+            Logger.shared.log(level: .default, "\(restoreError.localizedDescription)")
+            return
+        } else if case .success(let macPlatformConfiguration) = macPlatformConfigurationResult,
+               let macPlatformConfiguration = macPlatformConfiguration
+        {
+            let vmConfiguration = VMConfiguration()
+            vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+            self.vmConfiguration = vmConfiguration
+            
+            do {
+                try vmConfiguration.validate()
+                Logger.shared.log(level: .default, "vm configuration is valid, using \(vmParameters.cpuCount) cpus and \(vmParameters.memorySizeInGB) gb ram")
+            } catch let error {
+                Logger.shared.log(level: .default, "failed to validate vm configuration: \(error.localizedDescription)")
+                return
+            }
+            
+            let vm = VZVirtualMachine(configuration: vmConfiguration, queue: queue)
+            vm.delegate = self
+            
+            vmView.virtualMachine = vm
+            vmView.automaticallyReconfiguresDisplay = true
+            vmView.capturesSystemKeys = true
+            self.vm = vm
+        } else {
+            Logger.shared.log(level: .default, "Could not create platform configuration.")
             return
         }
-        
-        let vm = VZVirtualMachine(configuration: vmConfiguration, queue: queue)
-        vm.delegate = self
-        
-        vmView.virtualMachine = vm
-        vmView.automaticallyReconfiguresDisplay = true
-        vmView.capturesSystemKeys = true
-        self.vm = vm
     }
     
     fileprivate func setupConstraints() {

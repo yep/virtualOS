@@ -6,12 +6,18 @@
 import Foundation
 
 extension URL {
-    static let basePath             = NSHomeDirectory() + "/Documents"
-    static let restoreImageURL      = URL(fileURLWithPath: basePath + "/RestoreImage.ipsw")
-    static let bundleName           = "virtualOS.bundle/"
-    
+    static let basePath         = NSHomeDirectory() + "/Documents"
+    static let bundleName       = "virtualOS.bundle/"
+    static let restoreImageName = "RestoreImage.ipsw"
+
     static var baseURL: URL {
         return URL(fileURLWithPath: basePath)
+    }
+    static var defaultRestoreImageURL: URL {
+        return URL(fileURLWithPath: basePath + "/" + restoreImageName)
+    }
+    static var tmpURL: URL {
+        return URL(fileURLWithPath: NSHomeDirectory() + "/tmp")
     }
     var auxiliaryStorageURL: URL {
         return self.appending(path: "AuxiliaryStorage")

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 struct FileModel {
     func getVMBundles() -> [VMBundle] {
@@ -55,5 +56,16 @@ struct FileModel {
         }
         
         return url
+    }
+    
+    static func cleanUpTemporaryFiles() {
+        do {
+            let files = try FileManager.default.contentsOfDirectory(at: URL.tmpURL, includingPropertiesForKeys: nil)
+            for file in files {
+                try FileManager.default.removeItem(at: file)
+            }
+        } catch let error {
+            Logger.shared.log(level: .default, "error: removing temporary file failed: \(error)")
+        }
     }
 }
