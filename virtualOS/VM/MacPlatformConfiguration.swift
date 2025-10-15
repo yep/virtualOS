@@ -66,7 +66,7 @@ final class MacPlatformConfiguration: VZMacPlatformConfiguration {
             return macPlatformConfiguration
         }
         
-        let auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: URL.baseURL.auxiliaryStorageURL)
+        let auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: URL.documentsPathURL.auxiliaryStorageURL)
         macPlatformConfiguration.auxiliaryStorage = auxiliaryStorage
         
         guard let macPlatformConfiguration = macPlatformConfiguration.createPlatformConfiguration(macHardwareModel: mostFeaturefulSupportedConfiguration.hardwareModel, bundleURL: bundleURL) else {

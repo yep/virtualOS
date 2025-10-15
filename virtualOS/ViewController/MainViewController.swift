@@ -39,7 +39,7 @@ final class MainViewController: NSViewController {
 
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeVMLocationNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeAppSettings, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
 
@@ -84,6 +84,7 @@ final class MainViewController: NSViewController {
            let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
         {
             windowController.showWindow(self)
+            windowController.window?.title = "Restore Image"
             windowController.contentViewController = restoreImageViewController
             if let parentFrame = view.window?.frame,
                let childWindow = restoreImageViewController.view.window
@@ -134,29 +135,31 @@ final class MainViewController: NSViewController {
     }
     
     @objc func restoreImageSelected(notification: Notification) {
-        if let userInfo = notification.userInfo,
-           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String
+        guard let userInfo = notification.userInfo,
+           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String else
         {
-            if restoreImageName != Constants.restoreImageNameLatest {
-                let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
-                accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
-                
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB. During install, a lot of RAM is used, ignore the warning about low system memory.", accessoryView: accessoryView)
-                let modalResponse = alert.runModal()
-                accessoryView.becomeFirstResponder()
-
-                if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
-                    diskImageSize = Int(accessoryView.intValue)
-                } else {
-                    return // cancel install
-                }
-                if diskImageSize < 30 {
-                    self.diskImageSize = 30
-                }
-            }
-            
-            showSheet(mode: .install, restoreImageName: restoreImageName, diskImageSize: self.diskImageSize)
+            return
         }
+        
+        if restoreImageName != Constants.restoreImageNameLatest {
+            let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
+            accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
+            
+            let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB. During install, a lot of RAM is used, ignore the warning about low system memory.", accessoryView: accessoryView)
+            let modalResponse = alert.runModal()
+            accessoryView.becomeFirstResponder()
+
+            if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
+                diskImageSize = Int(accessoryView.intValue)
+            } else {
+                return // cancel install
+            }
+            if diskImageSize < 30 {
+                self.diskImageSize = 30
+            }
+        }
+        
+        showSheet(mode: .install, restoreImageName: restoreImageName, diskImageSize: self.diskImageSize)
     }
     
     @objc func cpuCountChanged(sender: NSSlider) {
@@ -284,18 +287,21 @@ final class MainViewController: NSViewController {
     }
 
     fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
-        if let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
-           let progressWindow = progressWindowController.window
+        guard let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
+           let progressWindow = progressWindowController.window else
         {
-            if let progressViewController = progressWindow.contentViewController as? ProgressViewController {
-                progressViewController.mode = mode
-                progressViewController.diskImageSize = diskImageSize
-                progressViewController.restoreImageName = restoreImageName
-                presentAsSheet(progressViewController)
-            }
-        } else {
             Logger.shared.log(level: .default, "show modal failed")
+            return
         }
+        
+        guard let progressViewController = progressWindow.contentViewController as? ProgressViewController else {
+            return
+        }
+        
+        progressViewController.mode = mode
+        progressViewController.diskImageSize = diskImageSize
+        progressViewController.restoreImageName = restoreImageName
+        presentAsSheet(progressViewController)
     }
 }
 

@@ -93,11 +93,11 @@ final class RestoreImageDownload {
         }
         
         if let localURL = localURL {
-            try? FileManager.default.moveItem(at: localURL, to: URL.restoreImageURL)
-            Logger.shared.log(level: .default, "moved restore image to \(URL.restoreImageURL)")
+            try? FileManager.default.moveItem(at: localURL, to: URL.defaultRestoreImageURL)
+            Logger.shared.log(level: .default, "moved restore image to \(URL.defaultRestoreImageURL)")
             delegate?.done(error: nil)
         } else {
-            Logger.shared.log(level: .default, "failed to move downloaded restore image to \(URL.restoreImageURL)")
+            Logger.shared.log(level: .default, "failed to move downloaded restore image to \(URL.defaultRestoreImageURL)")
             return
         }
     }

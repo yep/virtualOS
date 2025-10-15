@@ -48,7 +48,7 @@ final class RestoreImageViewController: NSViewController {
     
     @IBAction func showInFinderButtonPressed(_ sender: NSButton) {
         if tableView.selectedRow != -1 {
-            let url = URL.baseURL.appendingPathComponent(self.selectedRestoreImage)
+            let url = URL.documentsPathURL.appendingPathComponent(self.selectedRestoreImage)
             NSWorkspace.shared.activateFileViewerSelecting([url])
         }
     }
@@ -64,7 +64,7 @@ final class RestoreImageViewController: NSViewController {
             tableView.selectedRow != -1
         {
             let name = fileModel.getRestoreImages()[tableView.selectedRow]
-            let url = URL.baseURL.appendingPathComponent(name)
+            let url = URL.documentsPathURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
                 switch result {
                 case .success(let restoreImage):

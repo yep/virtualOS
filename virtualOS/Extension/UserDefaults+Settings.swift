@@ -11,14 +11,16 @@ import Foundation
 extension UserDefaults {
     fileprivate static let diskSizeKey                  = "diskSize"
     fileprivate static let vmFilesDirectoryKey          = "vmFilesDirectoryKey"
-    fileprivate static let vmFilesDirectoryBookmarkData = "vmFilesDirectoryBookmarkData"
+    fileprivate static let vmFilesDirectoryBookmarkDataKey = "vmFilesDirectoryBookmarkData"
+    fileprivate static let restoreImagesDirectoryKey     = "restoreImagesDirectoryKey"
+    fileprivate static let restoreImagesDirectoryBookmarkDataKey = "restoreImagesDirectoryBookmarkData"
 
     var diskSize: Int {
         get {
             if object(forKey: Self.diskSizeKey) != nil {
                 return integer(forKey: Self.diskSizeKey)
             }
-            return 30 // default value
+            return 30 // default value, 30GB
         }
         set {
             set(newValue, forKey: Self.diskSizeKey)
@@ -38,10 +40,34 @@ extension UserDefaults {
 
     var vmFilesDirectoryBookmarkData: Data? {
         get {
-            return data(forKey: Self.vmFilesDirectoryBookmarkData)
+            return data(forKey: Self.vmFilesDirectoryBookmarkDataKey)
         }
         set {
-            set(newValue, forKey: Self.vmFilesDirectoryBookmarkData)
+            set(newValue, forKey: Self.vmFilesDirectoryBookmarkDataKey)
+            synchronize()
+        }
+    }
+
+    var restoreImagesDirectoryBookmarkData: Data? {
+        get {
+            return data(forKey: Self.restoreImagesDirectoryBookmarkDataKey)
+        }
+        set {
+            set(newValue, forKey: Self.restoreImagesDirectoryBookmarkDataKey)
+            synchronize()
+        }
+    }
+
+    var restoreImagesDirectory: String? {
+        get {
+            let value = string(forKey: Self.restoreImagesDirectoryKey)
+            if value == nil {
+                return URL.defaultRestoreImageURL.path
+            }
+            return value
+        }
+        set {
+            set(newValue, forKey: Self.restoreImagesDirectoryKey)
             synchronize()
         }
     }

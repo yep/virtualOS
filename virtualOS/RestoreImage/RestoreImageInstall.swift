@@ -29,9 +29,9 @@ final class RestoreImageInstall {
     func install() {
         let restoreImageURL: URL
         if let restoreImageName {
-            restoreImageURL = URL(fileURLWithPath: URL.baseURL.appendingPathComponent(restoreImageName).path())
+            restoreImageURL = URL(fileURLWithPath: URL.documentsPathURL.appendingPathComponent(restoreImageName).path())
         } else {
-            restoreImageURL = URL.restoreImageURL
+            restoreImageURL = URL.defaultRestoreImageURL
         }
         
         if !FileManager.default.fileExists(atPath: restoreImageURL.path) {
@@ -107,10 +107,10 @@ final class RestoreImageInstall {
 
         let vm = VZVirtualMachine(configuration: vmConfiguration, queue: userInteractivQueue)
         
-        var restoreImageURL = URL.restoreImageURL
+        var restoreImageURL = URL.defaultRestoreImageURL
         if let restoreImageName {
             // use custom restore image
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
+            restoreImageURL = URL.documentsPathURL.appendingPathComponent(restoreImageName)
         }
         
         userInteractivQueue.async { [weak self] in
