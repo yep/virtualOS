@@ -19,9 +19,12 @@ final class SettingsViewController: NSViewController {
     @IBOutlet weak var restoreImageFilesURLLabel: NSTextField!
     
     override func viewWillAppear() {
-        updateVMFilesLabel()
+        super.viewWillAppear()
+        
+        updateSettingsLabels()
+        configureWindow()
     }
-
+    
     @IBAction func selectFolderButtonPressed(_ sender: NSButton) {
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = false
@@ -76,7 +79,7 @@ final class SettingsViewController: NSViewController {
             if let directoryString = UserDefaults.standard.vmFilesDirectory {
                 url = URL(fileURLWithPath: directoryString)
             } else {
-                url = URL.documentsPathURL
+                url = URL.baseURL
             }
         case .restoreImagesDirectory:
             if let directoryString = UserDefaults.standard.restoreImagesDirectory {
@@ -89,13 +92,6 @@ final class SettingsViewController: NSViewController {
         }
         
         NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        
-        updateSettingsLabels()
-        configureWindow()
     }
     
     fileprivate func configureWindow() {

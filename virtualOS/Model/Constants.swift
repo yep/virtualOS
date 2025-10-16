@@ -12,5 +12,5 @@ struct Constants {
     static let restoreImageNameLatest = "latest"
     static let selectedRestoreImage   = "selectedRestoreImage"
     static let restoreImageNameSelectedNotification = Notification.Name("restoreImageSelected")
-    static let didChangeVMLocationNotification      = Notification.Name("didChangeVMLocation")
+    static let didChangeAppSettings      = Notification.Name("didChangeAppSettings")
 }

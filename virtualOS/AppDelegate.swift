@@ -12,7 +12,7 @@ import Cocoa
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if let path = UserDefaults.standard.restoreImagesDirectory {
-            URL.documentsPath = path
+            // TODO update
         }
     }
 
