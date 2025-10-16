@@ -11,7 +11,9 @@ import Cocoa
 @main
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
+        if let path = UserDefaults.standard.restoreImagesDirectory {
+            URL.documentsPath = path
+        }
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {

@@ -48,26 +48,27 @@ extension UserDefaults {
         }
     }
 
+    /// Returns the Restore Images directory selected by the user. Defaults to the `Documents` directory.
+    var restoreImagesDirectory: String? {
+        get {
+            let value = string(forKey: Self.restoreImagesDirectoryKey)
+            if value == nil {
+                return URL.documentsPath
+            }
+            return value
+        }
+        set {
+            set(newValue, forKey: Self.restoreImagesDirectoryKey)
+            synchronize()
+        }
+    }
+
     var restoreImagesDirectoryBookmarkData: Data? {
         get {
             return data(forKey: Self.restoreImagesDirectoryBookmarkDataKey)
         }
         set {
             set(newValue, forKey: Self.restoreImagesDirectoryBookmarkDataKey)
-            synchronize()
-        }
-    }
-
-    var restoreImagesDirectory: String? {
-        get {
-            let value = string(forKey: Self.restoreImagesDirectoryKey)
-            if value == nil {
-                return URL.defaultRestoreImageURL.path
-            }
-            return value
-        }
-        set {
-            set(newValue, forKey: Self.restoreImagesDirectoryKey)
             synchronize()
         }
     }

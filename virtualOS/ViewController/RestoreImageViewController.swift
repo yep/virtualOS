@@ -19,18 +19,30 @@ final class RestoreImageViewController: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var installButton: NSButton!
     @IBOutlet weak var showInFinderButton: NSButton!
-    @IBOutlet weak var infoTextField: NSTextField!    
+    @IBOutlet weak var infoTextField: NSTextField!
+    
+    var restoreImages: [String] {
+        return fileModel.getRestoreImages()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         tableView.dataSource = self
         tableView.delegate = self
+        
+        NotificationCenter.default
+            .addObserver(self, selector: #selector(reloadTable), name: Constants.didChangeAppSettings, object: nil)
     }
     
     override func viewWillAppear() {
         super.viewWillAppear()
+        
+        // remove selection
         tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        
         updateInfoLabel()
+        
         if tableView.numberOfRows > 0 {
             setButtons(enabled: true)
         } else {
@@ -59,11 +71,15 @@ final class RestoreImageViewController: NSViewController {
         view.window?.close()
     }
     
+    @objc private func reloadTable() {
+        tableView.reloadData()
+    }
+    
     fileprivate func updateInfoLabel() {
-        if tableView.selectedRow < fileModel.getRestoreImages().count &&
+        if tableView.selectedRow < restoreImages.count &&
             tableView.selectedRow != -1
         {
-            let name = fileModel.getRestoreImages()[tableView.selectedRow]
+            let name = restoreImages[tableView.selectedRow]
             let url = URL.documentsPathURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
                 switch result {
@@ -88,11 +104,10 @@ final class RestoreImageViewController: NSViewController {
 
 extension RestoreImageViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return fileModel.getRestoreImages().count
+        return restoreImages.count
     }
     
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        let restoreImages = fileModel.getRestoreImages()
         if row < restoreImages.count {
             return restoreImages[row]
         } else {
@@ -102,9 +117,7 @@ extension RestoreImageViewController: NSTableViewDataSource {
 }
 
 extension RestoreImageViewController: NSTableViewDelegate {
-    func tableViewSelectionDidChange(_ notification: Notification) {
-        let restoreImages = fileModel.getRestoreImages()
-        
+    func tableViewSelectionDidChange(_ notification: Notification) {        
         let selectedRow = tableView.selectedRow
         if selectedRow != -1 && selectedRow < restoreImages.count {
             selectedRestoreImage = restoreImages[selectedRow]

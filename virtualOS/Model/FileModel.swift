@@ -9,7 +9,7 @@
 import Foundation
 
 struct FileModel {
-    var restoreImageExists: Bool {
+    var defaultRestoreImageExists: Bool {
         return FileManager.default.fileExists(atPath: URL.defaultRestoreImageURL.path)
     }
 
@@ -34,6 +34,8 @@ struct FileModel {
         return result
     }
     
+    /// Returns the names of the restore images in the images directory
+    /// - Performs directory scan each time
     func getRestoreImages() -> [String] {
         var result: [String] = []
         if let urls = try? FileManager.default.contentsOfDirectory(at: URL.documentsPathURL, includingPropertiesForKeys: nil, options: []) {
