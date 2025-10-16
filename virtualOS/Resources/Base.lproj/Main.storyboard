@@ -24,7 +24,7 @@
                                         <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
                                         <menuItem title="Preferences…" keyEquivalent="," id="BOF-NM-1cW">
                                             <connections>
-                                                <segue destination="Xqe-mX-POt" kind="show" id="ogJ-Ly-ARq"/>
+                                                <segue destination="7oT-TM-Kld" kind="show" id="1GN-Ej-GCg"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="wFC-TO-SCJ"/>
@@ -883,7 +883,7 @@
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="150" id="HlI-kp-iqx"/>
                                 </constraints>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Teu-XY-Qhj">
-                                    <rect key="frame" x="1" y="170" width="384" height="17"/>
+                                    <rect key="frame" x="1" y="142" width="384" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="cyE-aw-R3w">
@@ -978,90 +978,6 @@
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="102" y="1022.5"/>
-        </scene>
-        <!--Settings-->
-        <scene sceneID="Qt9-N3-HhJ">
-            <objects>
-                <viewController title="Settings" id="Xqe-mX-POt" customClass="SettingsViewController" customModule="virtualOS" customModuleProvider="target" sceneMemberID="viewController">
-                    <customView key="view" id="yG5-4w-bTo">
-                        <rect key="frame" x="0.0" y="0.0" width="463" height="102"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <subviews>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Oir-YL-keR">
-                                <rect key="frame" x="330" y="61" width="113" height="24"/>
-                                <buttonCell key="cell" type="push" title="Show in Finder" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="AbN-et-pKv">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="showInFinderButtonPressed:" target="Xqe-mX-POt" id="FJp-qw-o7x"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yrx-BG-l55">
-                                <rect key="frame" x="143" y="61" width="104" height="21"/>
-                                <buttonCell key="cell" type="push" title="Select Folder" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="iTn-kK-dDs">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="selectFolderButtonPressed:" target="Xqe-mX-POt" id="f9G-Wd-fdl"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1JM-2f-1me">
-                                <rect key="frame" x="259" y="61" width="59" height="24"/>
-                                <buttonCell key="cell" type="push" title="Reset" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mPJ-qR-vtN">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="resetButtonPressed:" target="Xqe-mX-POt" id="Kwk-8L-7VD"/>
-                                </connections>
-                            </button>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="N5x-TP-ag2">
-                                <rect key="frame" x="18" y="20" width="427" height="36"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="36" id="2K4-dO-x7Q"/>
-                                    <constraint firstAttribute="width" constant="423" id="M3j-3A-oov"/>
-                                </constraints>
-                                <textFieldCell key="cell" title="VM Files URL" id="ow8-Hj-vT5">
-                                    <font key="font" metaFont="smallSystem"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eeq-an-X5s">
-                                <rect key="frame" x="18" y="65" width="56" height="16"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="VM Files" id="fDk-2c-wQ3">
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                        </subviews>
-                        <constraints>
-                            <constraint firstItem="N5x-TP-ag2" firstAttribute="top" secondItem="eeq-an-X5s" secondAttribute="bottom" constant="9" id="0tz-CN-WyT"/>
-                            <constraint firstItem="eeq-an-X5s" firstAttribute="leading" secondItem="yG5-4w-bTo" secondAttribute="leading" constant="20" symbolic="YES" id="6ws-ha-Gys"/>
-                            <constraint firstItem="yrx-BG-l55" firstAttribute="baseline" secondItem="1JM-2f-1me" secondAttribute="baseline" id="96J-Ws-0eA"/>
-                            <constraint firstItem="1JM-2f-1me" firstAttribute="leading" secondItem="yrx-BG-l55" secondAttribute="trailing" constant="12" symbolic="YES" id="E34-ho-lkF"/>
-                            <constraint firstItem="Oir-YL-keR" firstAttribute="leading" secondItem="1JM-2f-1me" secondAttribute="trailing" constant="12" symbolic="YES" id="Hp5-1g-Qdq"/>
-                            <constraint firstItem="yrx-BG-l55" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="eeq-an-X5s" secondAttribute="trailing" constant="8" symbolic="YES" id="IuO-gg-gHu"/>
-                            <constraint firstItem="1JM-2f-1me" firstAttribute="baseline" secondItem="Oir-YL-keR" secondAttribute="baseline" id="PYo-JK-nrv"/>
-                            <constraint firstItem="Oir-YL-keR" firstAttribute="trailing" secondItem="N5x-TP-ag2" secondAttribute="trailing" id="REA-mb-32E"/>
-                            <constraint firstItem="eeq-an-X5s" firstAttribute="baseline" secondItem="yrx-BG-l55" secondAttribute="baseline" id="TOC-NR-S0Z"/>
-                            <constraint firstItem="eeq-an-X5s" firstAttribute="leading" secondItem="N5x-TP-ag2" secondAttribute="leading" id="kXi-y1-uoz"/>
-                            <constraint firstAttribute="trailing" secondItem="Oir-YL-keR" secondAttribute="trailing" constant="20" symbolic="YES" id="kmW-el-1Uv"/>
-                            <constraint firstItem="yrx-BG-l55" firstAttribute="top" secondItem="yG5-4w-bTo" secondAttribute="top" constant="20" symbolic="YES" id="oAY-GN-eYq"/>
-                            <constraint firstItem="eeq-an-X5s" firstAttribute="top" secondItem="yG5-4w-bTo" secondAttribute="top" constant="21" id="reo-nV-FwY"/>
-                            <constraint firstAttribute="bottom" secondItem="N5x-TP-ag2" secondAttribute="bottom" constant="20" symbolic="YES" id="svA-Vt-bpn"/>
-                        </constraints>
-                    </customView>
-                    <connections>
-                        <outlet property="vmFilesURLLabel" destination="N5x-TP-ag2" id="70K-hx-P8c"/>
-                    </connections>
-                </viewController>
-                <customObject id="jSA-fl-LXp" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="813" y="159"/>
         </scene>
         <!--VM View-->
         <scene sceneID="7wI-8z-dsV">
@@ -1318,9 +1234,120 @@ Gw
             </objects>
             <point key="canvasLocation" x="1166" y="603"/>
         </scene>
+        <!--Settings-->
+        <scene sceneID="xVw-hR-itO">
+            <objects>
+                <viewController title="Settings" showSeguePresentationStyle="single" id="7oT-TM-Kld" customClass="SettingsViewController" customModule="virtualOS" customModuleProvider="target" sceneMemberID="viewController">
+                    <customView key="view" id="1jK-1O-ol1">
+                        <rect key="frame" x="0.0" y="0.0" width="489" height="213"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <subviews>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jdV-gW-9jq">
+                                <rect key="frame" x="18" y="112" width="409" height="24"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" borderStyle="bezel" title="VM Files" drawsBackground="YES" id="GU8-9j-AVf">
+                                    <font key="font" textStyle="body" name=".SFNS-Regular"/>
+                                    <color key="textColor" name="placeholderTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gnt-K9-yvT">
+                                <rect key="frame" x="18" y="144" width="59" height="16"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="VM Files" id="29X-uJ-C2S">
+                                    <font key="font" textStyle="headline" name=".SFNS-Bold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button identifier="vm-files" toolTip="Select folder" tag="1" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xhj-Tu-sX1">
+                                <rect key="frame" x="83" y="140" width="63" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Select" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6n2-it-gVV">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="selectFolderButtonPressed:" target="7oT-TM-Kld" id="ihU-eJ-XV2"/>
+                                </connections>
+                            </button>
+                            <button toolTip="Go to folder" tag="1" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="q5n-oZ-Qyi">
+                                <rect key="frame" x="435" y="112" width="42" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" bezelStyle="rounded" image="arrow.forward.folder.fill" catalog="system" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="yDP-ge-dWi">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="showInFinderButtonPressed:" target="7oT-TM-Kld" id="6XT-2d-qeY"/>
+                                </connections>
+                            </button>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KCW-1k-TcP">
+                                <rect key="frame" x="20" y="32" width="407" height="24"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" borderStyle="bezel" title="Restore Image Files" drawsBackground="YES" id="xwJ-li-fnu">
+                                    <font key="font" textStyle="body" name=".SFNS-Regular"/>
+                                    <color key="textColor" name="placeholderTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wj6-hS-saC">
+                                <rect key="frame" x="20" y="64" width="131" height="16"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Restore Image Files" id="CuR-QT-Mhb">
+                                    <font key="font" textStyle="headline" name=".SFNS-Bold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button identifier="restore-images" toolTip="Select folder" tag="2" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Frr-oS-xfC">
+                                <rect key="frame" x="157" y="60" width="63" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Select" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="CFE-i8-3JL">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="selectFolderButtonPressed:" target="7oT-TM-Kld" id="ujq-1F-MCt"/>
+                                </connections>
+                            </button>
+                            <button toolTip="Go to folder" tag="2" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3CT-Xg-tyP">
+                                <rect key="frame" x="435" y="32" width="42" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" bezelStyle="rounded" image="arrow.forward.folder.fill" catalog="system" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="K8U-wo-Qk1">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="showInFinderButtonPressed:" target="7oT-TM-Kld" id="bJO-J9-R2s"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xDW-Rl-VWg">
+                                <rect key="frame" x="418" y="169" width="59" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Reset" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="jPr-jZ-fK9">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="resetButtonPressed:" target="7oT-TM-Kld" id="rbg-ph-oiF"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                    </customView>
+                    <connections>
+                        <outlet property="restoreImageFilesURLLabel" destination="KCW-1k-TcP" id="Zv9-qc-VSk"/>
+                        <outlet property="vmFilesURLLabel" destination="jdV-gW-9jq" id="ndU-gI-DGO"/>
+                    </connections>
+                </viewController>
+                <customObject id="kRY-Fl-13z" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="860" y="160"/>
+        </scene>
     </scenes>
     <resources>
         <image name="NSAddTemplate" width="18" height="17"/>
+        <image name="arrow.forward.folder.fill" catalog="system" width="18" height="14"/>
         <image name="folder.fill" catalog="system" width="18" height="14"/>
         <image name="play.fill" catalog="system" width="12" height="13"/>
         <image name="trash.fill" catalog="system" width="15" height="17"/>

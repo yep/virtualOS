@@ -76,7 +76,7 @@ final class RestoreImageViewController: NSViewController {
     }
     
     fileprivate func updateInfoLabel() {
-        let restoreImageCount = fileModel.getRestoreImages().count
+        let restoreImageCount = restoreImages.count
         if restoreImageCount == 0 {
             infoTextField.stringValue = "No restore image available, download latest image."
         } else if tableView.selectedRow < restoreImageCount &&
