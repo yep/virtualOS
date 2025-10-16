@@ -26,12 +26,11 @@ final class ProgressViewController: NSViewController {
     var diskImageSize: Int? = 0
     fileprivate let restoreImageDownload = RestoreImageDownload()
     fileprivate var restoreImageInstall = RestoreImageInstall()
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
+    
+    override func viewDidLoad() {
         progressIndicator.doubleValue = 0
         statusTextField.stringValue = "Starting"
-        // Logger.shared.log(level: .default, "\(progressViewController.mode): \(mode))")
+        statusTextField.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
     }
     
     override func viewDidAppear() {
@@ -92,6 +91,8 @@ extension ProgressViewController: ProgressDelegate {
         DispatchQueue.main.async { [weak self] in
             if let mainViewController = self?.presentingViewController as? MainViewController {
                 mainViewController.dismiss(self)
+                mainViewController.updateUI()
+                
                 if let error = error {
                     mainViewController.showErrorAlert(error: error)
                     self?.statusTextField.stringValue = "Install Failed."

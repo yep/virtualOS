@@ -45,18 +45,16 @@ final class RestoreImageDownload {
     // MARK: - Private
     
     fileprivate func download(restoreImage: VZMacOSRestoreImage) {
-        Logger.shared.log(level: .default, "fetched, macOS \(restoreImage.operatingSystemVersionString)")
-                
-        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) {localUrl, response, error in
+        Logger.shared.log(level: .default, "downloading restore image for \(restoreImage.operatingSystemVersionString)")
+
+        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { localURL, response, error in
             self.downloading = false
-            self.downloadFinished(localURL: localUrl, error: error)
+            self.downloadFinished(localURL: localURL, error: error)
         }
         observation = downloadTask.progress.observe(\.fractionCompleted) { _, _ in }
         downloadTask.resume()
         self.downloadTask = downloadTask
-        
-        Logger.shared.log(level: .default, "downloading")
-        
+                
         func updateDownloadProgress() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
                 let progressString: String
@@ -92,15 +90,50 @@ final class RestoreImageDownload {
             delegate?.done(error: error)
         }
         
-        if let localURL = localURL {
-            try? FileManager.default.moveItem(at: localURL, to: URL.defaultRestoreImageURL)
-            Logger.shared.log(level: .default, "moved restore image to \(URL.defaultRestoreImageURL)")
+        if let localURL = localURL,
+           let vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+        {
+            let restoreImageURL = createRestoreImageURL(vmFilesDirectoryString: vmFilesDirectoryString)
+            try? FileManager.default.moveItem(at: localURL, to: restoreImageURL)
+            Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
             delegate?.done(error: nil)
         } else {
-            Logger.shared.log(level: .default, "failed to move downloaded restore image to \(URL.defaultRestoreImageURL)")
+            Logger.shared.log(level: .default, "failed to move downloaded restore image to vm files directory")
+            delegate?.done(error: RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory"))
             return
         }
     }
+    
+    fileprivate func createRestoreImageURL(vmFilesDirectoryString: String) -> URL {
+        // try to find a filename that does not exist
+        var url = URL(fileURLWithPath: vmFilesDirectoryString)
+        var exists = true
+        var i = 1
+        while exists {
+            url = nextURL(url, i)
+            if FileManager.default.fileExists(atPath: url.path) {
+                i += 1
+            } else {
+                exists = false
+            }
+        }
+        return url
+    }
+    
+    fileprivate func nextURL(_ url: URL, _ i: Int) -> URL {
+        var filename = url.lastPathComponent
+        filename = filename.replacingOccurrences(of: ".ipsw", with: "")
+        
+        let filenameComponents = filename.split(separator: "_")
+        if filenameComponents.count > 0 {
+            filename = String(filenameComponents[0])
+        }
+        filename += "_\(i).ipsw"
+        
+        let path = url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path
+        return URL(fileURLWithPath: path)
+    }
+
 }
 
 #endif

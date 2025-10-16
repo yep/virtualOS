@@ -27,6 +27,9 @@ final class MainViewController: NSViewController {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
     fileprivate var diskImageSize = 1
+    fileprivate var windowController: WindowController? {
+        return view.window?.windowController as? WindowController
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,48 +51,44 @@ final class MainViewController: NSViewController {
         cpuCountSlider.target = self
         cpuCountSlider.action = #selector(cpuCountChanged(sender:))
     }
-
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     override func viewWillAppear() {
         super.viewWillAppear()
+        
         view.window?.delegate = self
+        windowController?.mainViewController = self
         vmNameTextField.resignFirstResponder()
-        if let bookmarkURL = UserDefaults.standard.vmFilesDirectory,
-           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData,
-           let bookmarkURLWithPercentEncoding = bookmarkURL.removingPercentEncoding
-        {
-            _ = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURLWithPercentEncoding)            
-        }
-        self.updateUI()
+        startAccessToVMFilesDirectory()
+        FileModel.cleanUpTemporaryFiles()
+        updateUI()
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
-           let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
+        if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
         {
             vmViewController.vmBundle = viewModel.vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
-            windowController.showWindow(self)
-            windowController.contentViewController = vmViewController
+            
+            let newWindow = NSWindow(contentViewController: vmViewController)
+            newWindow.title = viewModel.vmBundle?.name ?? "virtualOS VM"
+            newWindow.makeKeyAndOrderFront(nil)
         } else {
             Logger.shared.log(level: .default, "show vm window failed")
         }
     }
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
-        if let windowController = mainStoryBoard.instantiateController(withIdentifier: "NSWindowController") as? NSWindowController,
-           let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
+        if let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
         {
-            windowController.showWindow(self)
-            windowController.window?.title = "Restore Image"
-            windowController.contentViewController = restoreImageViewController
-            if let parentFrame = view.window?.frame,
-               let childWindow = restoreImageViewController.view.window
-            {
-                childWindow.setFrame(parentFrame.offsetBy(dx: 200, dy: 10), display: true)
+            let newWindow = NSWindow(contentViewController: restoreImageViewController)
+            newWindow.title = "Restore Image"
+            newWindow.makeKeyAndOrderFront(nil)
+            if let parentFrame = view.window?.frame {
+                newWindow.setFrame(parentFrame.offsetBy(dx: 50, dy: -10), display: true)
             }
         } else {
             Logger.shared.log(level: .default, "show restore image window failed")
@@ -172,8 +171,13 @@ final class MainViewController: NSViewController {
         
     @objc func updateUI() {
         self.tableView.reloadData()
-        cpuCountSlider.isEnabled = false
-        ramSlider.isEnabled = false
+        
+        if let selectedRow = viewModel.selectedRow,
+           selectedRow < 0,
+           viewModel.tableViewDataSource.numberOfRows(in: tableView) > 0
+        {
+            viewModel.selectedRow = 0 // one or more vms available, select first
+        }
         
         if let selectedRow = viewModel.selectedRow,
            let vmBundle = viewModel.tableViewDataSource.vmBundle(forRow: selectedRow)
@@ -184,16 +188,16 @@ final class MainViewController: NSViewController {
             if let vmParameters = VMParameters.readFrom(url: vmBundle.url) {
                 viewModel.vmParameters = vmParameters
                 viewModel.textFieldDelegate.vmBundle = vmBundle
-                updateButtons(enabled: true)
                 updateLabels(setZero: false)
                 updateCpuCount(vmParameters)
                 updateRam(vmParameters)
+                updateEnabledState(enabled: true)
             }
         } else {
-            vmNameTextField.stringValue = ""
-            viewModel.selectedRow = 0
-            updateButtons(enabled: false)
+            vmNameTextField.stringValue = "No virtual machine available. Press install to add one."
+            viewModel.vmParameters = nil
             updateLabels(setZero: true)
+            updateEnabledState(enabled: false)
         }
 
         updateOutlineView()
@@ -210,6 +214,9 @@ final class MainViewController: NSViewController {
         {
             messageText = failureReason
             informativeText = reason + " " + underlyingError.localizedDescription + "\n\n(Error Code: \(vzError.errorCode), Underlying Error Domain: \(underlyingError.domain), Underlying Error Code: \(underlyingError.code))"
+            if vzError.errorCode == 10007 && underlyingError.code == 3004 {
+                informativeText += "\n\nYou have to be connected to the internet to start the install."
+            }
         } else if let restoreError = error as? RestoreError {
             informativeText = error.localizedDescription + " " + restoreError.localizedDescription
         } else {
@@ -224,14 +231,14 @@ final class MainViewController: NSViewController {
     }
     
     // MARK: - Private
-
-    fileprivate func updateButtons(enabled: Bool) {
-        startButton.isEnabled = enabled
-        sharedFolderButton.isEnabled = enabled
-        deleteButton.isEnabled = enabled
-        vmNameTextField.isEnabled = enabled
-    }
     
+    fileprivate func updateEnabledState(enabled: Bool) {
+        ramSlider.isEnabled       = enabled
+        cpuCountSlider.isEnabled  = enabled
+        vmNameTextField.isEnabled = enabled
+        windowController?.updateButtons(hidden: !enabled)
+    }
+
     fileprivate func updateCpuCount(_ vmParameters: VMParameters) {
         cpuCountSlider.minValue = Double(vmParameters.cpuCountMin)
         cpuCountSlider.maxValue = Double(vmParameters.cpuCountMax)
@@ -272,19 +279,6 @@ final class MainViewController: NSViewController {
         updateLabels(setZero: false)
         updateOutlineView()
     }
-    
-    fileprivate func updateButtonEnabledState() {
-        var enabled = false
-        if viewModel.selectedRow != nil {
-            enabled = true
-        }
-        vmNameTextField.isEnabled    = enabled
-        startButton.isEnabled        = enabled
-        sharedFolderButton.isEnabled = enabled
-        deleteButton.isEnabled       = enabled
-        ramSlider.isEnabled          = enabled
-        cpuCountSlider.isEnabled     = enabled
-    }
 
     fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
         guard let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
@@ -303,6 +297,18 @@ final class MainViewController: NSViewController {
         progressViewController.restoreImageName = restoreImageName
         presentAsSheet(progressViewController)
     }
+    
+    fileprivate func startAccessToVMFilesDirectory() {
+        if let bookmarkURL = UserDefaults.standard.vmFilesDirectory?.removingPercentEncoding,
+           let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+        {
+            if Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkURL) == nil {
+                // previous vm file directory no longer exists, reset
+                UserDefaults.standard.resetVMFilesDirectory()
+            }
+        }
+    }
+
 }
 
 extension MainViewController: NSTableViewDelegate {
@@ -319,7 +325,6 @@ extension MainViewController: NSTableViewDelegate {
         if let row  = row {
             viewModel.selectedRow = row
             updateUI()
-            updateButtonEnabledState()
         }
     }
 }

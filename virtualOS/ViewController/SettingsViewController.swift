@@ -18,6 +18,10 @@ final class SettingsViewController: NSViewController {
     @IBOutlet weak var vmFilesURLLabel: NSTextField!
     @IBOutlet weak var restoreImageFilesURLLabel: NSTextField!
     
+    override func viewWillAppear() {
+        updateVMFilesLabel()
+    }
+
     @IBAction func selectFolderButtonPressed(_ sender: NSButton) {
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = false
@@ -110,9 +114,11 @@ final class SettingsViewController: NSViewController {
     }
     
     fileprivate func updateSettingsLabels() {
-        
-        vmFilesURLLabel.stringValue = UserDefaults.standard.vmFilesDirectory ?? URL.documentsPath
-        restoreImageFilesURLLabel.stringValue = UserDefaults.standard.restoreImagesDirectory ?? URL.documentsPath
+        // vmFilesURLLabel.stringValue = UserDefaults.standard.vmFilesDirectory ?? URL.documentsPath
+        restoreImageFilesURLLabel.stringValue = UserDefaults.standard.restoreImagesDirectory ?? URL.basePath
+
+        let vmFilesDirectory = FileModel.createVMFilesDirectory()
+        vmFilesURLLabel.stringValue = "Storing VM files at:\n\(vmFilesDirectory.path)"
     }
     
     fileprivate func postNotification() {

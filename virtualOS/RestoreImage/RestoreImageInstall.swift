@@ -27,11 +27,9 @@ final class RestoreImageInstall {
     }
 
     func install() {
-        let restoreImageURL: URL
+        var restoreImageURL = URL.defaultRestoreImageURL
         if let restoreImageName {
-            restoreImageURL = URL(fileURLWithPath: URL.documentsPathURL.appendingPathComponent(restoreImageName).path())
-        } else {
-            restoreImageURL = URL.defaultRestoreImageURL
+            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
         }
         
         if !FileManager.default.fileExists(atPath: restoreImageURL.path) {
@@ -76,23 +74,34 @@ final class RestoreImageInstall {
     
     fileprivate func startInstall(restoreImage: VZMacOSRestoreImage, bundleURL: URL)  {
         var versionString = ""
-        guard let macPlatformConfiguration = MacPlatformConfiguration.createDefault(fromRestoreImage: restoreImage, versionString: &versionString, bundleURL: bundleURL) else {
+        let macPlatformConfigurationResult = MacPlatformConfiguration.createDefault(fromRestoreImage: restoreImage, versionString: &versionString, bundleURL: bundleURL)
+        if case .failure(let error) = macPlatformConfigurationResult {
+            delegate?.done(error: error)
             return
         }
-
+        
         var vmParameters = VMParameters()
         let vmConfiguration = VMConfiguration()
-        vmConfiguration.platform = macPlatformConfiguration
-        
-        if let diskImageSize = diskImageSize {
-            vmParameters.diskSizeInGB = UInt64(diskImageSize)
-            if createDiskImage(diskImageURL: bundleURL.diskImageURL, sizeInGB: UInt64(vmParameters.diskSizeInGB)) {
-                return
+        if case .success(let macPlatformConfiguration) = macPlatformConfigurationResult,
+           let macPlatformConfiguration
+        {
+            vmConfiguration.platform = macPlatformConfiguration
+            
+            if let diskImageSize = diskImageSize {
+                vmParameters.diskSizeInGB = UInt64(diskImageSize)
+                let restoreResult = createDiskImage(diskImageURL: bundleURL.diskImageURL, sizeInGB: UInt64(vmParameters.diskSizeInGB))
+                if case .failure(let restoreError) = restoreResult {
+                    delegate?.done(error: restoreError)
+                    return
+                }
             }
+            
+            vmConfiguration.setDefault(parameters: &vmParameters)
+            vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+        } else {
+            delegate?.done(error: RestoreError(localizedDescription: "Could not create mac platform configuration."))
+            return
         }
-        
-        vmConfiguration.setDefault(parameters: &vmParameters)
-        vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
         
         vmParameters.version = restoreImage.operatingSystemVersionString
         vmParameters.writeToDisk(bundleURL: bundleURL)
@@ -173,14 +182,24 @@ final class RestoreImageInstall {
     }
     
     fileprivate func createBundleURL() -> URL? {
+        var vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+        var vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+        
+        if vmFilesDirectoryString == nil || vmFilesDirectoryBookmarkData == nil {
+            // previous vm file directory no longer exists, reset
+            UserDefaults.standard.resetVMFilesDirectory()
+            vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+            vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
+        }
+        
         guard let vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory,
-           let vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData else
+              let vmFilesDirectoryBookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData else
         {
             return nil // error
         }
 
         // try to find a filename that does not exist
-        var url = URL(fileURLWithPath: vmFilesDirectoryString.appending(URL.bundleName))
+        var url = URL(fileURLWithPath: vmFilesDirectoryString.appending("/" + URL.bundleName))
         var exists = true
         var i = 1
         while exists {
@@ -231,27 +250,24 @@ final class RestoreImageInstall {
         return nil // no error
     }
     
-    fileprivate func createDiskImage(diskImageURL: URL, sizeInGB: UInt64) -> Bool {
+    fileprivate func createDiskImage(diskImageURL: URL, sizeInGB: UInt64) -> RestoreResult {
         let diskImageFileDescriptor = open(diskImageURL.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
         if diskImageFileDescriptor == -1 {
-            Logger.shared.log(level: .default, "error: cannot create disk image")
-            return false // failure
+            return RestoreResult(errorMessage: "Error: can not create disk image")
         }
 
         let diskSize = sizeInGB.gigabytesToBytes()
         var result = ftruncate(diskImageFileDescriptor, Int64(diskSize))
         if result != 0 {
-            Logger.shared.log(level: .default, "error: expanding disk image failed")
-            return false // failure
+            return RestoreResult(errorMessage: "Error: expanding disk image failed")
         }
 
         result = close(diskImageFileDescriptor)
         if result != 0 {
-            Logger.shared.log(level: .default, "error: failed to close the disk image")
-            return false // failure
+            return RestoreResult(errorMessage: "Error: failed to close the disk image")
         }
 
-        return false // failure
+        return RestoreResult() // success
     }
 }
 
