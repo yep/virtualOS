@@ -53,7 +53,7 @@ extension UserDefaults {
         get {
             let value = string(forKey: Self.restoreImagesDirectoryKey)
             if value == nil {
-                return URL.documentsPath
+                return URL.basePath
             }
             return value
         }

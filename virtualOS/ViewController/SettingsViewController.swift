@@ -111,7 +111,7 @@ final class SettingsViewController: NSViewController {
     
     fileprivate func updateSettingsLabels() {
         // vmFilesURLLabel.stringValue = UserDefaults.standard.vmFilesDirectory ?? URL.documentsPath
-        restoreImageFilesURLLabel.stringValue = UserDefaults.standard.restoreImagesDirectory ?? URL.basePath
+//        restoreImageFilesURLLabel.stringValue = UserDefaults.standard.restoreImagesDirectory ?? URL.basePath
 
         let vmFilesDirectory = FileModel.createVMFilesDirectory()
         vmFilesURLLabel.stringValue = "Storing VM files at:\n\(vmFilesDirectory.path)"

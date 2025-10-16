@@ -119,7 +119,7 @@ final class RestoreImageInstall {
         var restoreImageURL = URL.defaultRestoreImageURL
         if let restoreImageName {
             // use custom restore image
-            restoreImageURL = URL.documentsPathURL.appendingPathComponent(restoreImageName)
+            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
         }
         
         userInteractivQueue.async { [weak self] in

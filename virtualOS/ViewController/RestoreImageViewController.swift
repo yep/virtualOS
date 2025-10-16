@@ -83,7 +83,7 @@ final class RestoreImageViewController: NSViewController {
             tableView.selectedRow != -1
         {
             let name = restoreImages[tableView.selectedRow]
-            let url = URL.documentsPathURL.appendingPathComponent(name)
+            let url = URL.baseURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
                 switch result {
                 case .success(let restoreImage):
