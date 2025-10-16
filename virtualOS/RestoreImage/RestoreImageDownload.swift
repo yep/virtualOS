@@ -91,9 +91,9 @@ final class RestoreImageDownload {
         }
         
         if let localURL = localURL,
-           let vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
+           let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory
         {
-            let restoreImageURL = createRestoreImageURL(vmFilesDirectoryString: vmFilesDirectoryString)
+            let restoreImageURL = createRestoreImageURL(directoryString: filesDirectoryString)
             try? FileManager.default.moveItem(at: localURL, to: restoreImageURL)
             Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
             delegate?.done(error: nil)
@@ -104,9 +104,9 @@ final class RestoreImageDownload {
         }
     }
     
-    fileprivate func createRestoreImageURL(vmFilesDirectoryString: String) -> URL {
+    fileprivate func createRestoreImageURL(directoryString: String) -> URL {
         // try to find a filename that does not exist
-        var url = URL(fileURLWithPath: vmFilesDirectoryString)
+        var url = URL(fileURLWithPath: directoryString)
         var exists = true
         var i = 1
         while exists {

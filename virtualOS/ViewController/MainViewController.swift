@@ -144,7 +144,11 @@ final class MainViewController: NSViewController {
             let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
             accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
             
-            let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB. During install, a lot of RAM is used, ignore the warning about low system memory.", accessoryView: accessoryView)
+            let alert = NSAlert.okCancelAlert(
+                messageText: "Disk Image Size in GB",
+                informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.defaultDiskSize) GB. During install, a lot of RAM is used, ignore the warning about low system memory.",
+                accessoryView: accessoryView
+            )
             let modalResponse = alert.runModal()
             accessoryView.becomeFirstResponder()
 
@@ -153,8 +157,8 @@ final class MainViewController: NSViewController {
             } else {
                 return // cancel install
             }
-            if diskImageSize < 30 {
-                self.diskImageSize = 30
+            if diskImageSize < Constants.defaultDiskSize {
+                self.diskImageSize = Constants.defaultDiskSize
             }
         }
         

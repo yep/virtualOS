@@ -13,4 +13,6 @@ struct Constants {
     static let selectedRestoreImage   = "selectedRestoreImage"
     static let restoreImageNameSelectedNotification = Notification.Name("restoreImageSelected")
     static let didChangeAppSettings      = Notification.Name("didChangeAppSettings")
+    /// Default disk size in GB
+    static let defaultDiskSize: Int = 30
 }
