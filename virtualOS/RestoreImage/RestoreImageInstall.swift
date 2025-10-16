@@ -21,17 +21,20 @@ final class RestoreImageInstall {
     fileprivate var installing = true
     fileprivate var installer:  VZMacOSInstaller?
     fileprivate let userInteractivQueue = DispatchQueue.global(qos: .userInteractive)
+    
+    fileprivate var restoreImageURL: URL {
+        var imageURL = URL.defaultRestoreImageURL
+        if let restoreImageName {
+            imageURL = URL.restoreImagesDirectoryURL.appendingPathComponent(restoreImageName)
+        }
+        return imageURL
+    }
 
     deinit {
         observation?.invalidate()
     }
 
     func install() {
-        var restoreImageURL = URL.defaultRestoreImageURL
-        if let restoreImageName {
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
-        }
-        
         if !FileManager.default.fileExists(atPath: restoreImageURL.path) {
             Logger.shared.log(level: .default, "no restore image")
             delegate?.progress(0, progressString: "error: no restore image")
@@ -116,27 +119,23 @@ final class RestoreImageInstall {
 
         let vm = VZVirtualMachine(configuration: vmConfiguration, queue: userInteractivQueue)
         
-        var restoreImageURL = URL.defaultRestoreImageURL
-        if let restoreImageName {
-            // use custom restore image
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
-        }
-        
         userInteractivQueue.async { [weak self] in
-            let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: restoreImageURL)
-            self?.installer = installer
+            guard let self else { return }
+            
+            let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: self.restoreImageURL)
+            self.installer = installer
             
             installer.install { result in
-                self?.installing = false
+                self.installing = false
                 switch result {
                 case .success():
-                    self?.installFinisehd(installer: installer)
+                    self.installFinished(installer: installer)
                 case .failure(let error):
-                    self?.delegate?.done(error: error)
+                    self.delegate?.done(error: error)
                 }
             }
             
-            self?.observation = installer.progress.observe(\.fractionCompleted) { _, _ in }
+            self.observation = installer.progress.observe(\.fractionCompleted) { _, _ in }
             
             func updateInstallProgress() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
@@ -157,7 +156,7 @@ final class RestoreImageInstall {
         }
     }
     
-    fileprivate func installFinisehd(installer: VZMacOSInstaller) {
+    fileprivate func installFinished(installer: VZMacOSInstaller) {
         Logger.shared.log(level: .default, "Install finished")
         installing = false
         delegate?.progress(installer.progress.fractionCompleted, progressString: "Install finished successfully.")

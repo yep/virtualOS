@@ -14,6 +14,11 @@ To use USB disks, you can set the location where VM files are stored.
 
 Unlike other apps on the AppStore, no In-App purchases are required for managing multiple virtual machines, setting CPU count or the amount of RAM.
 
+## Screenshot
+
+<img src="https://is2-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/a7/13/17/a7131759-cbb7-8f60-16f9-353ab2eda1bb/app_store_screenshot_2.png/0x0ss.png" width="200pt" />
+
+
 ## Download
 
 You can download this app from the [macOS AppStore](https://apps.apple.com/us/app/virtualos/id1614659226)
