@@ -23,7 +23,7 @@ extension URL {
     static var tmpURL: URL {
         return URL(fileURLWithPath: NSHomeDirectory() + "/tmp")
     }
-    /// The restore images directory URL
+    /// The restore images directory URL (custom or the default)
     static var restoreImagesDirectoryURL: URL {
         if let path = UserDefaults.standard.restoreImagesDirectory {
             return URL(fileURLWithPath: path)

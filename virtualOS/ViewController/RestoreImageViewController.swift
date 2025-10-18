@@ -28,6 +28,8 @@ final class RestoreImageViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        Bookmark.startRestoreImagesDirectoryAccess()
+        
         tableView.dataSource = self
         tableView.delegate = self
         
@@ -38,12 +40,11 @@ final class RestoreImageViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         
-        // remove selection
-        tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
-        
         updateInfoLabel()
         
         if tableView.numberOfRows > 0 {
+            // select the first item
+            tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
             setButtons(enabled: true)
         } else {
             setButtons(enabled: false)
@@ -83,7 +84,7 @@ final class RestoreImageViewController: NSViewController {
             tableView.selectedRow != -1
         {
             let name = restoreImages[tableView.selectedRow]
-            let url = URL.baseURL.appendingPathComponent(name)
+            let url = URL.restoreImagesDirectoryURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
                 switch result {
                 case .success(let restoreImage):

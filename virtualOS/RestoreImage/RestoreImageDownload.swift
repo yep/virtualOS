@@ -56,9 +56,8 @@ final class RestoreImageDownload {
         if let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory {
             targetURL = createRestoreImageURL(directoryString: filesDirectoryString)
             
-            // make sure access is granted for the path
-            let bookmarkData = UserDefaults.standard.restoreImagesDirectoryBookmarkData ?? UserDefaults.standard.vmFilesDirectoryBookmarkData
-            guard Bookmark.startAccess(bookmarkData: bookmarkData, for: filesDirectoryString) != nil else {
+            // grant access for the restore images path
+            guard Bookmark.startRestoreImagesDirectoryAccess() else {
                 Logger.shared.warning("Could not start accessing bookmark \(filesDirectoryString)")
                 return
             }
@@ -113,6 +112,7 @@ final class RestoreImageDownload {
             delegate?.progress(99, progressString: "Moving file...")
             
             do {
+                // FIXME: use file manager delegate
                 try FileManager.default.moveItem(at: tempURL, to: restoreImageURL)
                 Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
                 

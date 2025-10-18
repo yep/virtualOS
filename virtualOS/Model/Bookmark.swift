@@ -61,4 +61,18 @@ struct Bookmark {
         }
         Self.accessedURLs = [:]
     }
+    
+    @discardableResult
+    static func startRestoreImagesDirectoryAccess() -> Bool {
+        guard let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory else {
+            return false
+        }
+        
+        // make sure access is granted for the path
+        let bookmarkData = UserDefaults.standard.restoreImagesDirectoryBookmarkData ?? UserDefaults.standard.vmFilesDirectoryBookmarkData
+        if Bookmark.startAccess(bookmarkData: bookmarkData, for: filesDirectoryString) == nil {
+            return false
+        }
+        return true
+    }
 }
