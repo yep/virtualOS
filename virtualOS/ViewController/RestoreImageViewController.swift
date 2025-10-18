@@ -40,7 +40,7 @@ final class RestoreImageViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         
-        updateInfoLabel()
+        updateUI()
         
         if tableView.numberOfRows > 0 {
             // select the first item
@@ -76,27 +76,35 @@ final class RestoreImageViewController: NSViewController {
         tableView.reloadData()
     }
     
-    fileprivate func updateInfoLabel() {
+    fileprivate func updateUI() {
         let restoreImageCount = restoreImages.count
         if restoreImageCount == 0 {
             infoTextField.stringValue = "No restore image available, download latest image."
         } else if tableView.selectedRow < restoreImageCount &&
             tableView.selectedRow != -1
         {
+            infoTextField.stringValue = "Loading image..."
+            
             let name = restoreImages[tableView.selectedRow]
             let url = URL.restoreImagesDirectoryURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
-                switch result {
-                case .success(let restoreImage):
-                    DispatchQueue.main.async { [weak self] in
-                        self?.infoTextField.stringValue = restoreImage.operatingSystemVersionString
+                DispatchQueue.main.async { [weak self] in
+                    var info = ""
+                    switch result {
+                    case .success(let restoreImage):
+                        info = restoreImage.operatingSystemVersionString
+                        self?.setButtons(enabled: true)
+                    case .failure(let error):
+                        info = "Invalid image"
+                        self?.setButtons(enabled: false)
+                        Logger.shared.log(level: .default, "\(error)")
                     }
-                case .failure(let error):
-                    Logger.shared.log(level: .default, "\(error)")
+                    self?.infoTextField.stringValue = info
                 }
             }
         } else {
             infoTextField.stringValue = ""
+            setButtons(enabled: false)
         }
     }
     
@@ -125,11 +133,9 @@ extension RestoreImageViewController: NSTableViewDelegate {
         let selectedRow = tableView.selectedRow
         if selectedRow != -1 && selectedRow < restoreImages.count {
             selectedRestoreImage = restoreImages[selectedRow]
-            setButtons(enabled: true)
-        } else {
-            setButtons(enabled: false)
         }
-        updateInfoLabel()
+        
+        updateUI()
     }
 }
 

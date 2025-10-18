@@ -73,6 +73,10 @@ final class RestoreImageDownload {
                 
         func updateDownloadProgress() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                guard self?.downloading == true else {
+                    return
+                }
+                
                 let progressString: String
                 
                 if let byteCompletedCount = downloadTask.progress.userInfo[ProgressUserInfoKey("NSProgressByteCompletedCountKey")] as? Int,
@@ -86,11 +90,11 @@ final class RestoreImageDownload {
                 }
                 Logger.shared.log(level: .debug, "download progress: \(progressString)")
                 
-                self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: "Restore Image\nDownloading \(progressString)")
+                self?.delegate?.progress(downloadTask.progress.fractionCompleted,
+                                         progressString: "Restore Image: \(restoreImage.operatingSystemVersionString)\nDownloading \(progressString)")
 
-                if self?.downloading == true {
-                    updateDownloadProgress()
-                }
+                // continue updating
+                updateDownloadProgress()
             }
         }
         
@@ -105,24 +109,23 @@ final class RestoreImageDownload {
             progressDone(error: error)
         }
         
-        let moveError = RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory")
+        let moveError = RestoreError(localizedDescription: "Failed to prepare downloaded restore image")
         
         if let tempURL, let restoreImageURL {
             Logger.shared.log(level: .debug, "moving restore image: \(tempURL) to \(restoreImageURL)")
-            delegate?.progress(99, progressString: "Moving file...")
+            delegate?.progress(99, progressString: "Preparing file. Please wait...")
             
             do {
-                // FIXME: use file manager delegate
                 try FileManager.default.moveItem(at: tempURL, to: restoreImageURL)
                 Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
                 
                 progressDone(error: nil)
             } catch {
-                Logger.shared.log(level: .error, "failed to move restore image: \(error.localizedDescription)")
+                Logger.shared.log(level: .error, "failed to prepare restore image: \(error.localizedDescription)")
                 progressDone(error: moveError)
             }
         } else {
-            Logger.shared.log(level: .error, "failed to move downloaded restore image ")
+            Logger.shared.log(level: .error, "failed to prepare downloaded restore image ")
             progressDone(error: moveError)
         }
     }
