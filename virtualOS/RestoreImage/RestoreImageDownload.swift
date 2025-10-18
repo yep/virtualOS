@@ -52,9 +52,21 @@ final class RestoreImageDownload {
     fileprivate func download(restoreImage: VZMacOSRestoreImage) {
         Logger.shared.log(level: .default, "downloading restore image for \(restoreImage.operatingSystemVersionString)")
 
-        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { localURL, response, error in
+        var targetURL: URL? = nil
+        if let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory {
+            targetURL = createRestoreImageURL(directoryString: filesDirectoryString)
+            
+            // make sure access is granted for the path
+            let bookmarkData = UserDefaults.standard.restoreImagesDirectoryBookmarkData ?? UserDefaults.standard.vmFilesDirectoryBookmarkData
+            guard Bookmark.startAccess(bookmarkData: bookmarkData, for: filesDirectoryString) != nil else {
+                Logger.shared.warning("Could not start accessing bookmark \(filesDirectoryString)")
+                return
+            }
+        }
+        
+        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { tempURL, response, error in
             self.downloading = false
-            self.downloadFinished(localURL: localURL, error: error)
+            self.downloadFinished(tempURL: tempURL, restoreImageURL: targetURL, error: error)
         }
         observation = downloadTask.progress.observe(\.fractionCompleted) { _, _ in }
         downloadTask.resume()
@@ -86,26 +98,22 @@ final class RestoreImageDownload {
         updateDownloadProgress()
     }
     
-    fileprivate func downloadFinished(localURL: URL?, error: Error?) {
+    fileprivate func downloadFinished(tempURL: URL?, restoreImageURL: URL?, error: Error?) {
         Logger.shared.log(level: .default, "download finished")
         
         if let error {
-            Logger.shared.log(level: .error, "\(error.localizedDescription)")
+            Logger.shared.error("\(error.localizedDescription)")
             progressDone(error: error)
         }
         
         let moveError = RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory")
         
-        if let localURL = localURL,
-           let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory
-        {
-            let restoreImageURL = createRestoreImageURL(directoryString: filesDirectoryString)
-            
-            Logger.shared.log(level: .debug, "moving restore image: \(localURL) to \(restoreImageURL)")
+        if let tempURL, let restoreImageURL {
+            Logger.shared.log(level: .debug, "moving restore image: \(tempURL) to \(restoreImageURL)")
             delegate?.progress(99, progressString: "Moving file...")
             
             do {
-                try FileManager.default.moveItem(at: localURL, to: restoreImageURL)
+                try FileManager.default.moveItem(at: tempURL, to: restoreImageURL)
                 Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
                 
                 progressDone(error: nil)
@@ -114,7 +122,7 @@ final class RestoreImageDownload {
                 progressDone(error: moveError)
             }
         } else {
-            Logger.shared.log(level: .error, "failed to move downloaded restore image")
+            Logger.shared.log(level: .error, "failed to move downloaded restore image ")
             progressDone(error: moveError)
         }
     }
@@ -136,17 +144,18 @@ final class RestoreImageDownload {
     }
     
     fileprivate func nextURL(_ url: URL, _ i: Int) -> URL {
-        var filename = url.lastPathComponent
-        filename = filename.replacingOccurrences(of: ".ipsw", with: "")
-        
-        let filenameComponents = filename.split(separator: "_")
-        if filenameComponents.count > 0 {
-            filename = String(filenameComponents[0])
+        // ensure we're working with the directory, not a file
+        let directoryURL: URL
+        if url.hasDirectoryPath {
+            directoryURL = url
+        } else {
+            directoryURL = url.deletingLastPathComponent()
         }
-        filename += "_\(i).ipsw"
         
-        let path = url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path
-        return URL(fileURLWithPath: path)
+        // construct the filename
+        let filename = "RestoreImage_\(i).ipsw"
+        
+        return directoryURL.appendingPathComponent(filename)
     }
 
 }
