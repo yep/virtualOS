@@ -18,7 +18,7 @@ extension UserDefaults {
             if object(forKey: Self.diskSizeKey) != nil {
                 return integer(forKey: Self.diskSizeKey)
             }
-            return 30 // default value
+            return Constants.defaultDiskImageSize
         }
         set {
             set(newValue, forKey: Self.diskSizeKey)

@@ -9,7 +9,7 @@
 #if arch(arm64)
 
 import Virtualization
-import AVFoundation // for audio
+import AVFoundation // for microphone support
 import OSLog
 
 final class VMConfiguration: VZVirtualMachineConfiguration {
@@ -103,11 +103,25 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
     }
     
     fileprivate func configureNetworkDevices(parameters: VMParameters) {
-        let networkDevice = VZVirtioNetworkDeviceConfiguration()
-        let networkAttachment = VZNATNetworkDeviceAttachment()
-        networkDevice.attachment = networkAttachment
-        networkDevice.macAddress = VZMACAddress(string: parameters.macAddress) ?? .randomLocallyAdministered()
-        networkDevices = [networkDevice]
+        let networkDeviceConfiguration = VZVirtioNetworkDeviceConfiguration()
+        if parameters.networkType == .Bridge {
+            for interface in VZBridgedNetworkInterface.networkInterfaces {
+                if interface.description == parameters.networkBridge {
+                    networkDeviceConfiguration.attachment = VZBridgedNetworkDeviceAttachment(interface: interface)
+                }
+            }
+            
+            if networkDeviceConfiguration.attachment == nil,
+               let defaultInterface = VZBridgedNetworkInterface.networkInterfaces.first
+            {
+                networkDeviceConfiguration.attachment = VZBridgedNetworkDeviceAttachment(interface: defaultInterface)
+            }
+        } else {
+            networkDeviceConfiguration.attachment = VZNATNetworkDeviceAttachment()
+        }
+        
+        networkDeviceConfiguration.macAddress = VZMACAddress(string: parameters.macAddress) ?? .randomLocallyAdministered()
+        networkDevices = [networkDeviceConfiguration]
     }
 
     fileprivate func configureSharedFolder(parameters: VMParameters) {

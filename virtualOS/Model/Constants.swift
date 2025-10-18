@@ -13,4 +13,10 @@ struct Constants {
     static let selectedRestoreImage   = "selectedRestoreImage"
     static let restoreImageNameSelectedNotification = Notification.Name("restoreImageSelected")
     static let didChangeVMLocationNotification      = Notification.Name("didChangeVMLocation")
+    static let defaultDiskImageSize   = 30
+    
+    enum NetworkType: String, CaseIterable, Codable {
+        case nat
+        case bridged
+    }
 }
