@@ -119,6 +119,7 @@ final class MainViewController: NSViewController {
         openPanel.canChooseDirectories = true
         openPanel.canChooseFiles = false
         openPanel.prompt = "Select"
+        openPanel.message = "Select a folder to share with the VM"
         let modalResponse = openPanel.runModal()
         var sharedFolderURL: URL?
         if modalResponse == .OK,
