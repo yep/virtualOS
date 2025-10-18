@@ -44,6 +44,11 @@ final class RestoreImageDownload {
     
     // MARK: - Private
     
+    fileprivate func progressDone(error: Error?) {
+        delegate?.progress(100, progressString: "Done")
+        delegate?.done(error: error)
+    }
+    
     fileprivate func download(restoreImage: VZMacOSRestoreImage) {
         Logger.shared.log(level: .default, "downloading restore image for \(restoreImage.operatingSystemVersionString)")
 
@@ -64,15 +69,15 @@ final class RestoreImageDownload {
                 {
                     let mbCompleted = byteCompletedCount / (1024 * 1024)
                     let mbTotal     = byteTotalCount / (1024 * 1024)
-                    progressString = "Restore Image\nDownloading \(Int(downloadTask.progress.fractionCompleted * 100))% (\(mbCompleted) of \(mbTotal) MB)"
+                    progressString = "\(Int(downloadTask.progress.fractionCompleted * 100))% (\(mbCompleted) of \(mbTotal) MB)"
                 } else {
-                    progressString = "Restore Image\nDownloading \(Int(downloadTask.progress.fractionCompleted * 100))%"
+                    progressString = "\(Int(downloadTask.progress.fractionCompleted * 100))%"
                 }
-                Logger.shared.log(level: .default, "\(progressString)")
+                Logger.shared.log(level: .debug, "download progress: \(progressString)")
                 
-                self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: progressString)
+                self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: "Restore Image\nDownloading \(progressString)")
 
-                if let downloading = self?.downloading, downloading {
+                if self?.downloading == true {
                     updateDownloadProgress()
                 }
             }
@@ -83,24 +88,34 @@ final class RestoreImageDownload {
     
     fileprivate func downloadFinished(localURL: URL?, error: Error?) {
         Logger.shared.log(level: .default, "download finished")
-        delegate?.progress(100, progressString: "Done")
         
-        if let error = error {
-            Logger.shared.log(level: .default, "\(error.localizedDescription)")
-            delegate?.done(error: error)
+        if let error {
+            Logger.shared.log(level: .error, "\(error.localizedDescription)")
+            progressDone(error: error)
         }
         
+        let moveError = RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory")
+        
         if let localURL = localURL,
-           let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory
+           let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory
         {
             let restoreImageURL = createRestoreImageURL(directoryString: filesDirectoryString)
-            try? FileManager.default.moveItem(at: localURL, to: restoreImageURL)
-            Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
-            delegate?.done(error: nil)
+            
+            Logger.shared.log(level: .debug, "moving restore image: \(localURL) to \(restoreImageURL)")
+            delegate?.progress(99, progressString: "Moving file...")
+            
+            do {
+                try FileManager.default.moveItem(at: localURL, to: restoreImageURL)
+                Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
+                
+                progressDone(error: nil)
+            } catch {
+                Logger.shared.log(level: .error, "failed to move restore image: \(error.localizedDescription)")
+                progressDone(error: moveError)
+            }
         } else {
-            Logger.shared.log(level: .default, "failed to move downloaded restore image to vm files directory")
-            delegate?.done(error: RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory"))
-            return
+            Logger.shared.log(level: .error, "failed to move downloaded restore image")
+            progressDone(error: moveError)
         }
     }
     
