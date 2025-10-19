@@ -47,8 +47,7 @@ final class MainViewController: NSViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeVMLocationNotification, object: nil)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeAppSettingsNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
         
         ramSlider.target = self
@@ -144,7 +143,7 @@ final class MainViewController: NSViewController {
                 let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
                 accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
                 
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB.", accessoryView: accessoryView)
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.defaultDiskImageSize) GB.", accessoryView: accessoryView)
                 let modalResponse = alert.runModal()
                 accessoryView.becomeFirstResponder()
                 

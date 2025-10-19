@@ -44,12 +44,29 @@ final class RestoreImageDownload {
     
     // MARK: - Private
     
+    fileprivate func progressDone(error: Error?) {
+        FileModel.cleanUpTemporaryFiles()
+        delegate?.progress(100, progressString: "Done")
+        delegate?.done(error: error)
+    }
+    
     fileprivate func download(restoreImage: VZMacOSRestoreImage) {
         Logger.shared.log(level: .default, "downloading restore image for \(restoreImage.operatingSystemVersionString)")
 
-        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { localURL, response, error in
+        var targetURL: URL? = nil
+        if let filesDirectoryString = UserDefaults.standard.restoreImagesDirectory ?? UserDefaults.standard.vmFilesDirectory {
+            targetURL = createRestoreImageURL(directoryString: filesDirectoryString)
+            
+            // grant access for the restore images path
+            guard Bookmark.startRestoreImagesDirectoryAccess() else {
+                Logger.shared.warning("Could not start accessing bookmark \(filesDirectoryString)")
+                return
+            }
+        }
+        
+        let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { tempURL, response, error in
             self.downloading = false
-            self.downloadFinished(localURL: localURL, error: error)
+            self.downloadFinished(tempURL: tempURL, restoreImageURL: targetURL, error: error)
         }
         observation = downloadTask.progress.observe(\.fractionCompleted) { _, _ in }
         downloadTask.resume()
@@ -57,6 +74,10 @@ final class RestoreImageDownload {
                 
         func updateDownloadProgress() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                guard self?.downloading == true else {
+                    return
+                }
+                
                 let progressString: String
                 
                 if let byteCompletedCount = downloadTask.progress.userInfo[ProgressUserInfoKey("NSProgressByteCompletedCountKey")] as? Int,
@@ -64,53 +85,56 @@ final class RestoreImageDownload {
                 {
                     let mbCompleted = byteCompletedCount / (1024 * 1024)
                     let mbTotal     = byteTotalCount / (1024 * 1024)
-                    progressString = "Restore Image\nDownloading \(Int(downloadTask.progress.fractionCompleted * 100))% (\(mbCompleted) of \(mbTotal) MB)"
+                    progressString = "\(Int(downloadTask.progress.fractionCompleted * 100))% (\(mbCompleted) of \(mbTotal) MB)"
                 } else {
-                    progressString = "Restore Image\nDownloading \(Int(downloadTask.progress.fractionCompleted * 100))%"
+                    progressString = "\(Int(downloadTask.progress.fractionCompleted * 100))%"
                 }
-                Logger.shared.log(level: .default, "\(progressString)")
+                Logger.shared.log(level: .debug, "download progress: \(progressString)")
                 
-                self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: progressString)
+                self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: "\(restoreImage.operatingSystemVersionString)\nDownloading \(progressString)")
 
-                if let downloading = self?.downloading, downloading {
-                    updateDownloadProgress()
-                }
+                // continue updating
+                updateDownloadProgress()
             }
         }
         
         updateDownloadProgress()
     }
     
-    fileprivate func downloadFinished(localURL: URL?, error: Error?) {
-        Logger.shared.log(level: .default, "download finished")
-        delegate?.progress(100, progressString: "Done")
-        
-        if let error = error {
-            Logger.shared.log(level: .default, "\(error.localizedDescription)")
-            delegate?.done(error: error)
-        }
-        
-        if let localURL = localURL,
-           let vmFilesDirectoryString = UserDefaults.standard.vmFilesDirectory
-        {
-            let restoreImageURL = createRestoreImageURL(vmFilesDirectoryString: vmFilesDirectoryString)
-            try? FileManager.default.moveItem(at: localURL, to: restoreImageURL)
-            Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
-            delegate?.done(error: nil)
-        } else {
-            Logger.shared.log(level: .default, "failed to move downloaded restore image to vm files directory")
-            delegate?.done(error: RestoreError(localizedDescription: "Failed to move downloaded restore image to VM files directory"))
+    fileprivate func downloadFinished(tempURL: URL?, restoreImageURL: URL?, error: Error?) {
+        if let error {
+            Logger.shared.error("\(error.localizedDescription)")
+            progressDone(error: error)
             return
+        }
+        Logger.shared.log(level: .default, "download finished")
+        
+        let moveError = RestoreError(localizedDescription: "Failed to prepare downloaded restore image")
+        if let tempURL, let restoreImageURL {
+            Logger.shared.log(level: .debug, "moving restore image: \(tempURL) to \(restoreImageURL)")
+            delegate?.progress(99, progressString: "Preparing file. Please wait...")
+            
+            do {
+                try FileManager.default.moveItem(at: tempURL, to: restoreImageURL)
+                Logger.shared.log(level: .default, "moved restore image to \(restoreImageURL)")
+                progressDone(error: nil)
+            } catch {
+                Logger.shared.log(level: .error, "failed to prepare restore image: \(error.localizedDescription)")
+                progressDone(error: moveError)
+            }
+        } else {
+            Logger.shared.log(level: .error, "failed to prepare downloaded restore image ")
+            progressDone(error: moveError)
         }
     }
     
-    fileprivate func createRestoreImageURL(vmFilesDirectoryString: String) -> URL {
+    fileprivate func createRestoreImageURL(directoryString: String) -> URL {
         // try to find a filename that does not exist
-        var url = URL(fileURLWithPath: vmFilesDirectoryString)
+        var url = URL(fileURLWithPath: directoryString)
         var exists = true
         var i = 1
         while exists {
-            url = nextURL(url, i)
+            url = URL.nextURL(for: url, index: i, baseName: "RestoreImage")
             if FileManager.default.fileExists(atPath: url.path) {
                 i += 1
             } else {
@@ -119,21 +143,6 @@ final class RestoreImageDownload {
         }
         return url
     }
-    
-    fileprivate func nextURL(_ url: URL, _ i: Int) -> URL {
-        var filename = url.lastPathComponent
-        filename = filename.replacingOccurrences(of: ".ipsw", with: "")
-        
-        let filenameComponents = filename.split(separator: "_")
-        if filenameComponents.count > 0 {
-            filename = String(filenameComponents[0])
-        }
-        filename += "_\(i).ipsw"
-        
-        let path = url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path
-        return URL(fileURLWithPath: path)
-    }
-
 }
 
 #endif

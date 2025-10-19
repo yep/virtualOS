@@ -12,14 +12,9 @@ import OSLog
 struct FileModel {
     func getVMBundles() -> [VMBundle] {
         var result: [VMBundle] = []
-        var hardDiskDirectoryURL = URL.baseURL
-        
-        if let hardDiskDirectoryPath = UserDefaults.standard.vmFilesDirectory as String? {
-            hardDiskDirectoryURL = URL(fileURLWithPath: hardDiskDirectoryPath)
-        }
+        let vmFilesDirectoryPath = URL.vmFilesDirectoryURL
          
-        if let urls = try? FileManager.default.contentsOfDirectory(at: hardDiskDirectoryURL, includingPropertiesForKeys: nil, options: [])
-        {
+        if let urls = try? FileManager.default.contentsOfDirectory(at: vmFilesDirectoryPath, includingPropertiesForKeys: nil, options: []) {
             for url in urls {
                 if url.lastPathComponent.hasSuffix("bundle") {
                     result.append(VMBundle(url: url))
@@ -32,11 +27,12 @@ struct FileModel {
         return result
     }
     
+    /// Returns the names of the restore images in the images directory
+    /// - Performs directory scan each time
     func getRestoreImages() -> [String] {
         var result: [String] = []
-        let vmFilesDirectory = FileModel.createVMFilesDirectory()
-                
-        if let urls = try? FileManager.default.contentsOfDirectory(at: vmFilesDirectory, includingPropertiesForKeys: nil, options: []) {
+        
+        if let urls = try? FileManager.default.contentsOfDirectory(at: URL.restoreImagesDirectoryURL, includingPropertiesForKeys: nil, options: []) {
             for url in urls {
                 if url.lastPathComponent.hasSuffix("ipsw") {
                     result.append(url.lastPathComponent)
@@ -49,7 +45,6 @@ struct FileModel {
     
     static func createVMFilesDirectory() -> URL {
         var url = URL.baseURL
-        
         if let vmFilesDirectory = UserDefaults.standard.vmFilesDirectory {
             url = URL(fileURLWithPath: vmFilesDirectory)
         }

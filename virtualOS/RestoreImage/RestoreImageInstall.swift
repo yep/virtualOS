@@ -33,18 +33,13 @@ final class RestoreImageInstall {
     }
 
     func install() {
-        var restoreImageURL = URL.defaultRestoreImageURL
-        if let restoreImageName {
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
-        }
-        
-        if !FileManager.default.fileExists(atPath: restoreImageURL.path) {
+        if !FileManager.default.fileExists(atPath: URL.restoreImageURL.path) {
             Logger.shared.log(level: .default, "no restore image")
-            delegate?.progress(0, progressString: "error: no restore image")
+            delegate?.progress(0, progressString: "Error: No restore image")
             return
         }
         
-        loadRestoreImage(restoreImageURL: restoreImageURL)
+        loadRestoreImage(restoreImageURL: URL.restoreImageURL)
     }
     
     func cancel() {
@@ -123,27 +118,26 @@ final class RestoreImageInstall {
 
         let vm = VZVirtualMachine(configuration: vmConfiguration, queue: userInteractivQueue)
         
-        var restoreImageURL = URL.defaultRestoreImageURL
-        if let restoreImageName {
-            // use custom restore image
-            restoreImageURL = URL.baseURL.appendingPathComponent(restoreImageName)
-        }
-        
         userInteractivQueue.async { [weak self] in
-            let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: restoreImageURL)
-            self?.installer = installer
+            guard let self else {
+                Logger.shared.log(level: .default, "Error: Could not install VM, weak self is nil")
+                return
+            }
+            
+            let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: URL.restoreImageURL)
+            self.installer = installer
             
             installer.install { result in
-                self?.installState.installing = false
+                self.installState.installing = false
                 switch result {
                 case .success():
-                    self?.installFinisehd(installer: installer)
+                    self.installFinished(installer: installer)
                 case .failure(let error):
-                    self?.delegate?.done(error: error)
+                    self.delegate?.done(error: error)
                 }
             }
             
-            self?.observation = installer.progress.observe(\.fractionCompleted) { _, _ in }
+            self.observation = installer.progress.observe(\.fractionCompleted) { _, _ in }
             
             func updateInstallProgress() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
@@ -164,7 +158,7 @@ final class RestoreImageInstall {
         }
     }
     
-    fileprivate func installFinisehd(installer: VZMacOSInstaller) {
+    fileprivate func installFinished(installer: VZMacOSInstaller) {
         Logger.shared.log(level: .default, "Install finished")
         installState.installing = false
         installState.vmParameters?.installFinished = true
@@ -214,7 +208,7 @@ final class RestoreImageInstall {
         var exists = true
         var i = 1
         while exists {
-            url = nextURL(url, i)
+            url = URL.nextURL(for: url, index: i, baseName: URL.bundleName)
             if FileManager.default.fileExists(atPath: url.path) {
                 i += 1
             } else {
@@ -230,20 +224,6 @@ final class RestoreImageInstall {
         return url
     }
     
-    fileprivate func nextURL(_ url: URL, _ i: Int) -> URL {
-        var filename = url.lastPathComponent
-        filename = filename.replacingOccurrences(of: ".bundle", with: "")
-        
-        let filenameComponents = filename.split(separator: "_")
-        if filenameComponents.count > 0 {
-            filename = String(filenameComponents[0])
-        }
-        filename += "_\(i).bundle"
-        
-        let path = url.deletingLastPathComponent().appendingPathComponent(filename, conformingTo: .bundle).path
-        return URL(fileURLWithPath: path)
-    }
-
     fileprivate func createBundle(at bundleURL: URL) -> RestoreError? {
         if FileManager.default.fileExists(atPath: bundleURL.path) {
             return nil // already exists, no error

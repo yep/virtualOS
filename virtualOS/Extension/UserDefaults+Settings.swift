@@ -9,9 +9,11 @@
 import Foundation
 
 extension UserDefaults {
-    fileprivate static let diskSizeKey                  = "diskSize"
-    fileprivate static let vmFilesDirectoryKey          = "vmFilesDirectoryKey"
-    fileprivate static let vmFilesDirectoryBookmarkData = "vmFilesDirectoryBookmarkData"
+    fileprivate static let diskSizeKey                           = "diskSize"
+    fileprivate static let vmFilesDirectoryKey                   = "vmFilesDirectoryKey"
+    fileprivate static let vmFilesDirectoryBookmarkDataKey       = "vmFilesDirectoryBookmarkData"
+    fileprivate static let restoreImagesDirectoryKey             = "restoreImagesDirectoryKey"
+    fileprivate static let restoreImagesDirectoryBookmarkDataKey = "restoreImagesDirectoryBookmarkData"
 
     var diskSize: Int {
         get {
@@ -38,10 +40,30 @@ extension UserDefaults {
 
     var vmFilesDirectoryBookmarkData: Data? {
         get {
-            return data(forKey: Self.vmFilesDirectoryBookmarkData)
+            return data(forKey: Self.vmFilesDirectoryBookmarkDataKey)
         }
         set {
-            set(newValue, forKey: Self.vmFilesDirectoryBookmarkData)
+            set(newValue, forKey: Self.vmFilesDirectoryBookmarkDataKey)
+            synchronize()
+        }
+    }
+
+    var restoreImagesDirectory: String? {
+        get {
+            return string(forKey: Self.restoreImagesDirectoryKey)
+        }
+        set {
+            set(newValue, forKey: Self.restoreImagesDirectoryKey)
+            synchronize()
+        }
+    }
+
+    var restoreImagesDirectoryBookmarkData: Data? {
+        get {
+            return data(forKey: Self.restoreImagesDirectoryBookmarkDataKey)
+        }
+        set {
+            set(newValue, forKey: Self.restoreImagesDirectoryBookmarkDataKey)
             synchronize()
         }
     }

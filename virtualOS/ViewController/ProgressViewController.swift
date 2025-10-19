@@ -28,6 +28,8 @@ final class ProgressViewController: NSViewController {
     fileprivate var restoreImageInstall = RestoreImageInstall()
     
     override func viewDidLoad() {
+        super.viewDidLoad()
+        
         progressIndicator.doubleValue = 0
         statusTextField.stringValue = "Starting"
         statusTextField.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
@@ -73,33 +75,27 @@ final class ProgressViewController: NSViewController {
 
 extension ProgressViewController: ProgressDelegate {
     func progress(_ progress: Double, progressString: String) {
-        func updateUI() {
-            progressIndicator.doubleValue = progress * 100
-            statusTextField.stringValue = progressString
-        }
-        
-        if Thread.isMainThread {
-            updateUI()
-        } else {
-            DispatchQueue.main.async {
-                updateUI()
-            }
+        DispatchQueue.main.async { [weak self] in
+            self?.progressIndicator.doubleValue = progress * 100
+            self?.statusTextField.stringValue = progressString
         }
     }
     
     func done(error: Error? = nil) {
         DispatchQueue.main.async { [weak self] in
-            if let mainViewController = self?.presentingViewController as? MainViewController {
-                mainViewController.dismiss(self)
-                mainViewController.updateUI()
-                
-                if let error = error {
-                    mainViewController.showErrorAlert(error: error)
-                    self?.statusTextField.stringValue = "Install Failed."
-                    self?.cancelButton.title = "Close"
-                } else {
-                    self?.cancelButton.title = "Done"
-                }
+            guard let mainViewController = self?.presentingViewController as? MainViewController else {
+                return
+            }
+        
+            mainViewController.dismiss(self)
+            mainViewController.updateUI()
+            
+            if let error = error {
+                mainViewController.showErrorAlert(error: error)
+                self?.statusTextField.stringValue = "Install Failed."
+                self?.cancelButton.title = "Close"
+            } else {
+                self?.cancelButton.title = "Done"
             }
         }
     }

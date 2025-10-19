@@ -13,12 +13,19 @@ extension URL {
     static var baseURL: URL {
         return URL(fileURLWithPath: basePath)
     }
-    static var defaultRestoreImageURL: URL {
-        return URL(fileURLWithPath: basePath + "/" + restoreImageName)
+    static var restoreImageURL: URL {
+        return fileURL(for: UserDefaults.standard.restoreImagesDirectory)
+    }
+    static var restoreImagesDirectoryURL: URL {
+        return fileURL(for: UserDefaults.standard.restoreImagesDirectory)
+    }
+    static var vmFilesDirectoryURL: URL {
+        return fileURL(for: UserDefaults.standard.vmFilesDirectory)
     }
     static var tmpURL: URL {
         return URL(fileURLWithPath: NSHomeDirectory() + "/tmp")
     }
+    
     var auxiliaryStorageURL: URL {
         return self.appending(path: "AuxiliaryStorage")
     }
@@ -34,5 +41,24 @@ extension URL {
     var parametersURL: URL {
         return self.appending(path: "Parameters.txt")
     }
+    
+    static func nextURL(for url: URL, index i: Int, baseName: String) -> URL {
+        // ensure we're working with a directory, not a file
+        var directoryURL = url
+        if !url.hasDirectoryPath {
+            directoryURL = url.deletingLastPathComponent()
+        }
+        
+        let filename = "\(baseName)_\(i).ipsw"
+        return directoryURL.appendingPathComponent(filename)
+    }
+    
+    fileprivate static func fileURL(for path: String?) -> URL {
+        if let path {
+            return URL(fileURLWithPath: path)
+        }
+        return baseURL // default value
+    }
+
 }
 
