@@ -21,17 +21,30 @@ final class RestoreImageViewController: NSViewController {
     @IBOutlet weak var showInFinderButton: NSButton!
     @IBOutlet weak var infoTextField: NSTextField!    
     
+    var restoreImages: [String] {
+        return fileModel.getRestoreImages()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        Bookmark.startRestoreImagesDirectoryAccess()
+        
         tableView.dataSource = self
         tableView.delegate = self
+        
+        NotificationCenter.default
+            .addObserver(self, selector: #selector(reloadTable), name: Constants.didChangeAppSettingsNotification, object: nil)
     }
     
     override func viewWillAppear() {
         super.viewWillAppear()
-        tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
-        updateInfoLabel()
+        
+        updateUI()
+        
         if tableView.numberOfRows > 0 {
+            // select the first item
+            tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
             setButtons(enabled: true)
         } else {
             setButtons(enabled: false)
@@ -59,27 +72,39 @@ final class RestoreImageViewController: NSViewController {
         view.window?.close()
     }
     
-    fileprivate func updateInfoLabel() {
-        let restoreImageCount = fileModel.getRestoreImages().count
+    @objc private func reloadTable() {
+        tableView.reloadData()
+    }
+    
+    fileprivate func updateUI() {
+        let restoreImageCount = restoreImages.count
         if restoreImageCount == 0 {
             infoTextField.stringValue = "No restore image available, download latest image."
         } else if tableView.selectedRow < restoreImageCount &&
             tableView.selectedRow != -1
         {
-            let name = fileModel.getRestoreImages()[tableView.selectedRow]
-            let url = URL.baseURL.appendingPathComponent(name)
+            infoTextField.stringValue = "Loading image..."
+            
+            let name = restoreImages[tableView.selectedRow]
+            let url = URL.restoreImagesDirectoryURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
-                switch result {
-                case .success(let restoreImage):
-                    DispatchQueue.main.async { [weak self] in
-                        self?.infoTextField.stringValue = restoreImage.operatingSystemVersionString
+                DispatchQueue.main.async { [weak self] in
+                    var info = ""
+                    switch result {
+                    case .success(let restoreImage):
+                        info = restoreImage.operatingSystemVersionString
+                        self?.setButtons(enabled: true)
+                    case .failure(let error):
+                        info = "Invalid image"
+                        self?.setButtons(enabled: false)
+                        Logger.shared.log(level: .default, "\(error)")
                     }
-                case .failure(let error):
-                    Logger.shared.log(level: .default, "\(error)")
+                    self?.infoTextField.stringValue = info
                 }
             }
         } else {
             infoTextField.stringValue = ""
+            setButtons(enabled: false)
         }
     }
     
@@ -91,11 +116,10 @@ final class RestoreImageViewController: NSViewController {
 
 extension RestoreImageViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return fileModel.getRestoreImages().count
+        return restoreImages.count
     }
     
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        let restoreImages = fileModel.getRestoreImages()
         if row < restoreImages.count {
             return restoreImages[row]
         } else {
@@ -105,17 +129,13 @@ extension RestoreImageViewController: NSTableViewDataSource {
 }
 
 extension RestoreImageViewController: NSTableViewDelegate {
-    func tableViewSelectionDidChange(_ notification: Notification) {
-        let restoreImages = fileModel.getRestoreImages()
-        
+    func tableViewSelectionDidChange(_ notification: Notification) {        
         let selectedRow = tableView.selectedRow
         if selectedRow != -1 && selectedRow < restoreImages.count {
             selectedRestoreImage = restoreImages[selectedRow]
-            setButtons(enabled: true)
-        } else {
-            setButtons(enabled: false)
         }
-        updateInfoLabel()
+        
+        updateUI()
     }
 }
 

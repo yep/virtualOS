@@ -10,6 +10,14 @@ import Foundation
 import OSLog
 
 struct FileModel {
+    private var restoreImagesDirectoryURL: URL? {
+        if let path = UserDefaults.standard.restoreImagesDirectory as String? {
+            return URL(fileURLWithPath: path)
+        }
+        
+        return nil
+    }
+    
     func getVMBundles() -> [VMBundle] {
         var result: [VMBundle] = []
         var hardDiskDirectoryURL = URL.baseURL
@@ -29,11 +37,13 @@ struct FileModel {
         return result
     }
     
+    /// Returns the names of the restore images in the images directory
+    /// - Performs directory scan each time
     func getRestoreImages() -> [String] {
         var result: [String] = []
-        let vmFilesDirectory = FileModel.createVMFilesDirectory()
+        let imageFilesDirectory = restoreImagesDirectoryURL ?? FileModel.createVMFilesDirectory()
                 
-        if let urls = try? FileManager.default.contentsOfDirectory(at: vmFilesDirectory, includingPropertiesForKeys: nil, options: []) {
+        if let urls = try? FileManager.default.contentsOfDirectory(at: imageFilesDirectory, includingPropertiesForKeys: nil, options: []) {
             for url in urls {
                 if url.lastPathComponent.hasSuffix("ipsw") {
                     result.append(url.lastPathComponent)
