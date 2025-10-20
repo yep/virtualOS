@@ -15,7 +15,7 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         if mainViewModel?.vmParameters != nil {
-            return 5
+            return 3
         } else {
             return 0
         }
@@ -25,15 +25,11 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
         if let vmParameters = mainViewModel?.vmParameters {
             switch index {
             case 0:
-                return ["CPU Count", "\(vmParameters.cpuCount)"]
-            case 1:
-                return ["Memory Size (GB)", "\(vmParameters.memorySizeInGB)"]
-            case 2:
                 return ["Disk Size (GB)", "\(vmParameters.diskSizeInGB)"]
-            case 3:
+            case 1:
                 let sharedFolderString = sharedFolderInfo(vmParameters: vmParameters)
                 return ["Shared Folder", sharedFolderString]
-            case 4:
+            case 2:
                 return ["Version", "\(vmParameters.version)"]
             default:
                 return ["index \(index)", "value \(index)"]

@@ -9,7 +9,7 @@
 #if arch(arm64)
 
 import Virtualization
-import AVFoundation // for audio
+import AVFoundation // for microphone support
 import OSLog
 
 final class VMConfiguration: VZVirtualMachineConfiguration {
@@ -51,7 +51,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         
         if parameters.microphoneEnabled {
             AVCaptureDevice.requestAccess(for: .audio) { (granted: Bool) in
-                Logger.shared.log(level: .default, "microphone request granted: \(granted)")
+                Logger.shared.log(level: .default, "microphone access granted: \(granted)")
             }
             
             let inputStreamConfiguration = VZVirtioSoundDeviceInputStreamConfiguration()

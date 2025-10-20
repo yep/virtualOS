@@ -29,16 +29,15 @@ struct Bookmark {
             if let previousURL = accessedURLs[path],
                previousURL != bookmarkURL
             {
-                previousURL.stopAccessingSecurityScopedResource()
-                Logger.shared.log(level: .default, "stop accessing security scoped resource (1): \(previousURL.path())")
+                stopAccess(url: previousURL)
             }
             
             if accessedURLs[path] != bookmarkURL {
                 // resource not already accessed, start access
                 if bookmarkURL.startAccessingSecurityScopedResource() {
-                    Logger.shared.log(level: .default, "start accessing security scoped resource: \(path)")
+                    // Logger.shared.log(level: .info, "start accessing security scoped resource: \(path)")
                 } else {
-                    Logger.shared.log(level: .default, "stop accessing security scoped resource failed")
+                    // Logger.shared.log(level: .info, "stop accessing security scoped resource failed")
                 }
                 accessedURLs[path] = bookmarkURL
             }
@@ -50,14 +49,14 @@ struct Bookmark {
     
     static func stopAccess(url: URL) {
         url.stopAccessingSecurityScopedResource()
-        Logger.shared.log(level: .default, "stop accessing security scoped resource (2): \(url.path)")
+        // Logger.shared.log(level: .info, "stop accessing security scoped resource (1): \(url.path)")
         Self.accessedURLs[url.path] = nil
     }
     
     static func stopAllAccess() {
         for (urlString, accessedURL) in accessedURLs {
             accessedURL.stopAccessingSecurityScopedResource()
-            Logger.shared.log(level: .default, "stop accessing security scoped resource (3): \(urlString)")
+            Logger.shared.log(level: .info, "stop accessing security scoped resource (2): \(urlString)")
         }
         Self.accessedURLs = [:]
     }

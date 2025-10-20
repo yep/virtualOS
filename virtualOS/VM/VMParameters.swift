@@ -23,7 +23,7 @@ struct VMParameters: Codable {
     var screenWidth = 1500
     var screenHeight = 900
     var pixelsPerInch = 250
-    var microphoneEnabled = false
+    var microphoneEnabled = true
     var sharedFolderURL: URL?
     var sharedFolderData: Data?
     var macAddress = VZMACAddress.randomLocallyAdministered().string

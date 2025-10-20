@@ -8,6 +8,7 @@
 
 import Cocoa
 import Virtualization
+import AVFoundation // for microphone support
 import OSLog
 
 #if arch(arm64)
@@ -23,6 +24,9 @@ final class MainViewController: NSViewController {
     @IBOutlet weak var cpuCountSlider: NSSlider!
     @IBOutlet weak var ramLabel: NSTextField!
     @IBOutlet weak var ramSlider: NSSlider!
+    @IBOutlet weak var microphoneSwitch: NSSwitch!
+    @IBOutlet weak var networkPopUpButton: NSPopUpButton!
+    @IBOutlet weak var networkBridgePopUpButton: NSPopUpButton!
     
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
@@ -30,22 +34,23 @@ final class MainViewController: NSViewController {
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.window?.delegate           = self
         tableView.dataSource            = viewModel.tableViewDataSource
         tableView.delegate              = self
         parameterOutlineView.dataSource = viewModel.parametersViewDataSource
         parameterOutlineView.delegate   = viewModel.parametersViewDelegate
         vmNameTextField.delegate        = viewModel.textFieldDelegate
-
+        
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeVMLocationNotification, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
-
+        
         ramSlider.target = self
         ramSlider.action = #selector(memorySliderChanged(sender:))
         cpuCountSlider.target = self
@@ -58,13 +63,18 @@ final class MainViewController: NSViewController {
     
     override func viewWillAppear() {
         super.viewWillAppear()
-        
-        view.window?.delegate = self
         windowController?.mainViewController = self
         vmNameTextField.resignFirstResponder()
         startAccessToVMFilesDirectory()
         FileModel.cleanUpTemporaryFiles()
         updateUI()
+    }
+    
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        if viewModel.vmParameters?.microphoneEnabled == true {
+            checkMicrophonePermission()
+        }
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
@@ -103,16 +113,16 @@ final class MainViewController: NSViewController {
         let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Delete VM '\(vmBundle.name)'?", informativeText: "This can not be undone.", alertStyle: .warning)
         let selection = alert.runModal()
         if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
-           selection == NSApplication.ModalResponse.OK
+            selection == NSApplication.ModalResponse.OK
         {
             viewModel.deleteVM(selection: selection, vmBundle: vmBundle)
             viewModel.vmBundle = nil
             viewModel.vmParameters = nil
         }
-
+        
         self.updateUI()
     }
-        
+    
     @IBAction func sharedFolderButtonPressed(_ sender: Any) {
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = false
@@ -142,17 +152,17 @@ final class MainViewController: NSViewController {
                 let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
                 accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
                 
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB. During install, a lot of RAM is used, ignore the warning about low system memory.", accessoryView: accessoryView)
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is 30 GB.", accessoryView: accessoryView)
                 let modalResponse = alert.runModal()
                 accessoryView.becomeFirstResponder()
-
+                
                 if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
                     diskImageSize = Int(accessoryView.intValue)
                 } else {
                     return // cancel install
                 }
-                if diskImageSize < 30 {
-                    self.diskImageSize = 30
+                if diskImageSize < Constants.defaultDiskImageSize {
+                    self.diskImageSize = Constants.defaultDiskImageSize
                 }
             }
             
@@ -167,6 +177,15 @@ final class MainViewController: NSViewController {
     @objc func memorySliderChanged(sender: NSSlider) {
         updateUIAndStoreParametersToDisk()
     }
+    
+    @IBAction func microphoneSwitchToggled(_ sender: NSSwitch) {
+        if sender.state == .on {
+            checkMicrophonePermission()
+        }
+        viewModel.vmParameters?.microphoneEnabled = sender.state == .on
+        viewModel.storeParametersToDisk()
+    }
+    
         
     @objc func updateUI() {
         self.tableView.reloadData()
@@ -190,7 +209,7 @@ final class MainViewController: NSViewController {
                 updateLabels(setZero: false)
                 updateCpuCount(vmParameters)
                 updateRam(vmParameters)
-                updateEnabledState(enabled: true)
+                updateEnabledState(enabled: true, vmParameters: vmParameters)
             }
         } else {
             vmNameTextField.stringValue = "No virtual machine available. Press install to add one."
@@ -198,7 +217,7 @@ final class MainViewController: NSViewController {
             updateLabels(setZero: true)
             updateEnabledState(enabled: false)
         }
-
+        
         updateOutlineView()
     }
     
@@ -229,13 +248,18 @@ final class MainViewController: NSViewController {
     
     // MARK: - Private
     
-    fileprivate func updateEnabledState(enabled: Bool) {
-        ramSlider.isEnabled       = enabled
-        cpuCountSlider.isEnabled  = enabled
-        vmNameTextField.isEnabled = enabled
+    fileprivate func updateEnabledState(enabled: Bool, vmParameters: VMParameters? = nil) {
+        ramSlider.isEnabled        = enabled
+        cpuCountSlider.isEnabled   = enabled
+        vmNameTextField.isEnabled  = enabled
+        if vmParameters?.microphoneEnabled ?? false {
+            microphoneSwitch.state = .on
+        } else {
+            microphoneSwitch.state = .off
+        }
         windowController?.updateButtons(hidden: !enabled)
     }
-
+    
     fileprivate func updateCpuCount(_ vmParameters: VMParameters) {
         cpuCountSlider.minValue = Double(vmParameters.cpuCountMin)
         cpuCountSlider.maxValue = Double(vmParameters.cpuCountMax)
@@ -274,9 +298,8 @@ final class MainViewController: NSViewController {
     fileprivate func updateUIAndStoreParametersToDisk() {
         viewModel.storeParametersToDisk()
         updateLabels(setZero: false)
-        updateOutlineView()
     }
-
+    
     fileprivate func showSheet(mode: ProgressViewController.Mode, restoreImageName: String?, diskImageSize: Int?)  {
         if let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
            let progressWindow = progressWindowController.window
@@ -292,6 +315,22 @@ final class MainViewController: NSViewController {
         }
     }
     
+    fileprivate func checkMicrophonePermission() {
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            Logger.shared.log(level: .default, "audio support in the vm enabled: \(granted)")
+            if !granted {
+                DispatchQueue.main.async { [weak self] in
+                    let alert = NSAlert.okCancelAlert(messageText: "Microphone Permission", informativeText: "Please allow microphone access in System Settings → Privacy → Camera and Microphone to use audio input in the virtual machine.", showCancelButton: false)
+                    let _ = alert.runModal()
+                    self?.microphoneSwitch.state = .off
+                    self?.viewModel.vmParameters?.microphoneEnabled = false
+                    self?.viewModel.storeParametersToDisk()
+                }
+            }
+        }
+    }
+    
+    
     fileprivate func startAccessToVMFilesDirectory() {
         if let bookmarkURL = UserDefaults.standard.vmFilesDirectory?.removingPercentEncoding,
            let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
@@ -302,7 +341,6 @@ final class MainViewController: NSViewController {
             }
         }
     }
-
 }
 
 extension MainViewController: NSTableViewDelegate {
@@ -310,7 +348,7 @@ extension MainViewController: NSTableViewDelegate {
         var row: Int? = nil
         
         if let userInfo = notification.userInfo,
-            let indexSet = userInfo["NSTableViewCurrentRowSelectionUserInfoKey"] as? NSIndexSet {
+           let indexSet = userInfo["NSTableViewCurrentRowSelectionUserInfoKey"] as? NSIndexSet {
             if indexSet.count > 0 {
                 row = indexSet.firstIndex
             }
@@ -328,7 +366,7 @@ extension MainViewController: NSWindowDelegate  {
         let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Quit", informativeText: "Quitting the app will stop all virtual machines.", alertStyle: .warning)
         let selection = alert.runModal()
         if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
-           selection == NSApplication.ModalResponse.OK
+            selection == NSApplication.ModalResponse.OK
         {
             NSApplication.shared.terminate(self)
             return true
@@ -352,7 +390,7 @@ final class MainViewController: NSViewController {
     @IBOutlet weak var cpuCountSlider: NSSlider!
     @IBOutlet weak var ramLabel: NSTextField!
     @IBOutlet weak var ramSlider: NSSlider!
-
+    
     override func viewWillAppear() {
         super.viewWillAppear()
         vmNameTextField.stringValue = "Virtualization requires an Apple Silicon machine"
