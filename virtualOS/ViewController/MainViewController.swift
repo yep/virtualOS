@@ -85,28 +85,13 @@ final class MainViewController: NSViewController {
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
-        {
-            vmViewController.vmBundle = viewModel.vmBundle
-            vmViewController.vmParameters = viewModel.vmParameters
-            
-            let newWindow = NSWindow(contentViewController: vmViewController)
-            newWindow.title = viewModel.vmBundle?.name ?? "virtualOS VM"
-            newWindow.makeKeyAndOrderFront(nil)
-        } else {
-            Logger.shared.log(level: .default, "show vm window failed")
-        }
+        startVM()
     }
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
         if let restoreImageViewController = mainStoryBoard.instantiateController(withIdentifier: "RestoreImageViewController") as? RestoreImageViewController
         {
-            let newWindow = NSWindow(contentViewController: restoreImageViewController)
-            newWindow.title = "Restore Image"
-            newWindow.makeKeyAndOrderFront(nil)
-            if let parentFrame = view.window?.frame {
-                newWindow.setFrame(parentFrame.offsetBy(dx: 50, dy: -10), display: true)
-            }
+            show(viewController: restoreImageViewController, title: "Restore Image")
         } else {
             Logger.shared.log(level: .default, "show restore image window failed")
         }
@@ -192,8 +177,7 @@ final class MainViewController: NSViewController {
         viewModel.vmParameters?.microphoneEnabled = sender.state == .on
         viewModel.storeParametersToDisk()
     }
-    
-        
+
     @objc func updateUI() {
         self.tableView.reloadData()
         
@@ -322,6 +306,15 @@ final class MainViewController: NSViewController {
         }
     }
     
+    fileprivate func show(viewController: NSViewController, title: String) {
+        let newWindow = NSWindow(contentViewController: viewController)
+        newWindow.title = title
+        newWindow.makeKeyAndOrderFront(nil)
+        if let parentFrame = view.window?.frame {
+            newWindow.setFrame(parentFrame.offsetBy(dx: 90, dy: -10), display: true)
+        }
+    }
+
     fileprivate func checkMicrophonePermission() {
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             Logger.shared.log(level: .default, "audio support in the vm enabled: \(granted)")
@@ -337,6 +330,16 @@ final class MainViewController: NSViewController {
         }
     }
     
+    fileprivate func startVM() {
+        if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
+        {
+            vmViewController.vmBundle = viewModel.vmBundle
+            vmViewController.vmParameters = viewModel.vmParameters
+            show(viewController: vmViewController, title: viewModel.vmBundle?.name ?? "virtualOS VM")
+        } else {
+            Logger.shared.log(level: .default, "show vm window failed")
+        }
+    }
     
     fileprivate func startAccessToVMFilesDirectory() {
         if let bookmarkURL = UserDefaults.standard.vmFilesDirectory?.removingPercentEncoding,

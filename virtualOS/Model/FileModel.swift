@@ -26,6 +26,9 @@ struct FileModel {
                 }
             }
         }
+        result.sort { lhs, rhs in
+            lhs.name < rhs.name
+        }
         return result
     }
     
