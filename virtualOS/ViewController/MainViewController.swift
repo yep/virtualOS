@@ -75,6 +75,13 @@ final class MainViewController: NSViewController {
         if viewModel.vmParameters?.microphoneEnabled == true {
             checkMicrophonePermission()
         }
+        
+        for arg in CommandLine.arguments {
+            if (arg == "start") {
+                Logger.shared.log(level: .default, "auto-starting vm")
+                startVM()
+            }
+        }
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
