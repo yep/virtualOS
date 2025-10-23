@@ -14,8 +14,12 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     weak var mainViewModel: MainViewModel?
     
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
-        if mainViewModel?.vmParameters != nil {
-            return 3
+        if let vmParameters = mainViewModel?.vmParameters {
+            if vmParameters.installFinished == true {
+                return 3
+            } else {
+                return 1
+            }
         } else {
             return 0
         }
@@ -23,17 +27,19 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
         if let vmParameters = mainViewModel?.vmParameters {
-            switch index {
-            case 0:
-                return ["Disk Size (GB)", "\(vmParameters.diskSizeInGB)"]
-            case 1:
-                let sharedFolderString = sharedFolderInfo(vmParameters: vmParameters)
-                return ["Shared Folder", sharedFolderString]
-            case 2:
-                return ["Version", "\(vmParameters.version)"]
-            default:
-                return ["index \(index)", "value \(index)"]
+            if vmParameters.installFinished == false {
+                return ["Install incomplete", "Delete this VM and reinstall."]
+            } else {
+                if index == 0 {
+                    return ["Disk Size (GB)", "\(vmParameters.diskSizeInGB)"]
+                } else if index == 1 {
+                    let sharedFolderString = sharedFolderInfo(vmParameters: vmParameters)
+                    return ["Shared Folder", sharedFolderString]
+                } else if index == 2 {
+                    return ["Version", "\(vmParameters.version)"]
+                }
             }
+            
         }
         
         return ["index \(index)", "value \(index)"]

@@ -51,7 +51,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         
         if parameters.microphoneEnabled {
             AVCaptureDevice.requestAccess(for: .audio) { (granted: Bool) in
-                Logger.shared.log(level: .default, "microphone access granted: \(granted)")
+                // Logger.shared.log(level: .default, "microphone access granted: \(granted)")
             }
             
             let inputStreamConfiguration = VZVirtioSoundDeviceInputStreamConfiguration()

@@ -12,6 +12,7 @@ import Virtualization
 import OSLog
 
 struct VMParameters: Codable {
+    var installFinished: Bool? = false
     var cpuCount = 1
     var cpuCountMin = 1
     var cpuCountMax = 2
@@ -33,6 +34,7 @@ struct VMParameters: Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        installFinished   = try container.decodeIfPresent(Bool.self, forKey: .installFinished) ?? true // optional
         cpuCount          = try container.decode(Int.self, forKey: .cpuCount)
         cpuCountMin       = try container.decode(Int.self, forKey: .cpuCountMin)
         cpuCountMax       = try container.decode(Int.self, forKey: .cpuCountMax)
@@ -57,8 +59,8 @@ struct VMParameters: Codable {
         do {
             let json = try Data.init(contentsOf: url.appendingPathComponent("Parameters.txt", conformingTo: .text))
             return try decoder.decode(VMParameters.self, from: json)
-        } catch {
-            Logger.shared.log(level: .default, "failed to read parameters from \(url)")
+        } catch (let error) {
+            Logger.shared.log(level: .default, "failed to read parameters from \(url): \(error)")
         }
         return nil
     }

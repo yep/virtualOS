@@ -13,14 +13,20 @@ import OSLog
 #if arch(arm64)
 
 final class RestoreImageInstall {
+    fileprivate struct InstallState {
+        fileprivate var installing = true
+        fileprivate var vmParameters: VMParameters?
+        fileprivate var bundleURL: URL?
+    }
+    
     weak var delegate: ProgressDelegate?
     var restoreImageName: String?
     var diskImageSize: Int?
 
     fileprivate var observation: NSKeyValueObservation?
-    fileprivate var installing = true
     fileprivate var installer:  VZMacOSInstaller?
     fileprivate let userInteractivQueue = DispatchQueue.global(qos: .userInteractive)
+    fileprivate var installState = InstallState()
 
     deinit {
         observation?.invalidate()
@@ -38,7 +44,7 @@ final class RestoreImageInstall {
             return
         }
         
-        loadParametersFromRestoreImage(restoreImageURL: restoreImageURL)
+        loadRestoreImage(restoreImageURL: restoreImageURL)
     }
     
     func cancel() {
@@ -47,7 +53,7 @@ final class RestoreImageInstall {
     
     // MARK: - Private
     
-    fileprivate func loadParametersFromRestoreImage(restoreImageURL: URL?) {
+    fileprivate func loadRestoreImage(restoreImageURL: URL?) {
         guard let bundleURL = createBundleURL() else {
             self.delegate?.done(error: RestoreError(localizedDescription: "Failed to create VM bundle."))
             return
@@ -56,12 +62,12 @@ final class RestoreImageInstall {
             self.delegate?.done(error: error)
             return
         }
-        
         guard let restoreImageURL else {
             self.delegate?.done(error: RestoreError(localizedDescription: "Restore image URL unavailable."))
             return // error
         }
         
+        installState.bundleURL = bundleURL
         VZMacOSRestoreImage.load(from: restoreImageURL) { (result: Result<Virtualization.VZMacOSRestoreImage, Error>) in
             switch result {
             case .success(let restoreImage):
@@ -105,6 +111,7 @@ final class RestoreImageInstall {
         
         vmParameters.version = restoreImage.operatingSystemVersionString
         vmParameters.writeToDisk(bundleURL: bundleURL)
+        installState.vmParameters = vmParameters // keep reference to update installFinished parameter later
         
         do {
             try vmConfiguration.validate()
@@ -127,7 +134,7 @@ final class RestoreImageInstall {
             self?.installer = installer
             
             installer.install { result in
-                self?.installing = false
+                self?.installState.installing = false
                 switch result {
                 case .success():
                     self?.installFinisehd(installer: installer)
@@ -146,7 +153,7 @@ final class RestoreImageInstall {
                     }
                     progressString += "\n\(versionString)"
                     
-                    if let installing = self?.installing, installing {
+                    if let installing = self?.installState.installing, installing {
                         self?.delegate?.progress(installer.progress.fractionCompleted, progressString: progressString)
                         updateInstallProgress()
                     }
@@ -159,7 +166,11 @@ final class RestoreImageInstall {
     
     fileprivate func installFinisehd(installer: VZMacOSInstaller) {
         Logger.shared.log(level: .default, "Install finished")
-        installing = false
+        installState.installing = false
+        installState.vmParameters?.installFinished = true
+        if let bundleURL = installState.bundleURL {
+            installState.vmParameters?.writeToDisk(bundleURL: bundleURL)            
+        }
         delegate?.progress(installer.progress.fractionCompleted, progressString: "Install finished successfully.")
         delegate?.done(error: nil)
         stopVM()
