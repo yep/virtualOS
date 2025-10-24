@@ -25,7 +25,7 @@ final class VMViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         statusLabel.stringValue = ""
-        
+
         createVM()
         
         queue.async { [weak self] in
@@ -38,6 +38,11 @@ final class VMViewController: NSViewController {
                 }
             }
         }
+    }
+    
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        view.window?.delegate = self
     }
     
     // MARK: - Private
@@ -84,20 +89,32 @@ final class VMViewController: NSViewController {
     
     fileprivate func show(errorString: String) {
         Logger.shared.log(level: .default, "\(errorString)")
-        statusLabel.stringValue = errorString
+        DispatchQueue.main.async { [weak self] in
+            self?.statusLabel.stringValue = errorString
+        }
     }
 }
 
 extension VMViewController: VZVirtualMachineDelegate {
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
-        DispatchQueue.main.async { [weak self] in
-            self?.show(errorString: "Guest did stop")
-        }
+        show(errorString: "Guest did stop")
     }
     
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: any Error) {
-        DispatchQueue.main.async { [weak self] in
-            self?.show(errorString: "Guest did stop with error: \(error.localizedDescription)")
+        show(errorString: "Guest did stop with error: \(error.localizedDescription)")
+    }
+}
+
+extension VMViewController: NSWindowDelegate  {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM?", alertStyle: .warning)
+        let selection = alert.runModal()
+        if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
+           selection == NSApplication.ModalResponse.OK
+        {
+            return true
+        } else {
+            return false
         }
     }
 }
