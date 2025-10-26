@@ -7,6 +7,7 @@
 //
 
 import Virtualization
+import StoreKit
 import OSLog
 
 #if arch(arm64)
@@ -43,6 +44,15 @@ final class VMViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         view.window?.delegate = self
+    }
+    
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        
+        UserDefaults.standard.userRatingCounter += 1
+        if UserDefaults.standard.userRatingCounter.isMultiple(of: 5) {
+            AppStore.requestReview(in: self)
+        }
     }
     
     // MARK: - Private

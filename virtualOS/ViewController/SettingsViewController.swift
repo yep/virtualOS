@@ -10,8 +10,8 @@ import AppKit
 import OSLog
 
 fileprivate enum SettingTag: Int {
-    case vmFilesDirectory
-    case restoreImagesDirectory
+    case vmFilesDirectory = 1
+    case restoreImagesDirectory = 2
 }
 
 final class SettingsViewController: NSViewController {

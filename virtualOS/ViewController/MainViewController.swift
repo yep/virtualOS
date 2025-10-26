@@ -202,7 +202,7 @@ final class MainViewController: NSViewController {
                 updateEnabledState(enabled: true, vmParameters: vmParameters)
             }
         } else {
-            vmNameTextField.stringValue = "No virtual machine available. Press install to add one."
+            vmNameTextField.stringValue = "No virtual machines available. Press install to add one."
             viewModel.vmParameters = nil
             updateLabels(setZero: true)
             updateEnabledState(enabled: false)
