@@ -8,7 +8,6 @@
 
 import Cocoa
 import Virtualization
-import AVFoundation // for microphone support
 import OSLog
 
 #if arch(arm64)
@@ -39,8 +38,8 @@ final class MainViewController: NSViewController {
         super.viewDidLoad()
         
         view.window?.delegate           = self
-        tableView.dataSource            = viewModel.tableViewDataSource
         tableView.delegate              = self
+        tableView.dataSource            = viewModel.tableViewDataSource
         parameterOutlineView.dataSource = viewModel.parametersViewDataSource
         parameterOutlineView.delegate   = viewModel.parametersViewDelegate
         vmNameTextField.delegate        = viewModel.textFieldDelegate
@@ -49,6 +48,7 @@ final class MainViewController: NSViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeAppSettingsNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(networkBridgeInterfaceWillPopUp), name: NSPopUpButton.willPopUpNotification, object: nil)
         
         ramSlider.target = self
         ramSlider.action = #selector(memorySliderChanged(sender:))
@@ -72,7 +72,7 @@ final class MainViewController: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         if viewModel.vmParameters?.microphoneEnabled == true {
-            checkMicrophonePermission()
+            viewModel.checkMicrophonePermission {}
         }
         
         for arg in CommandLine.arguments {
@@ -171,10 +171,37 @@ final class MainViewController: NSViewController {
     
     @IBAction func microphoneSwitchToggled(_ sender: NSSwitch) {
         if sender.state == .on {
-            checkMicrophonePermission()
+            viewModel.checkMicrophonePermission {
+                DispatchQueue.main.async { [weak self] in
+                    let alert = NSAlert.okCancelAlert(messageText: "Microphone Permission", informativeText: "Please allow microphone access in System Settings → Privacy → Camera and Microphone to use audio input in the virtual machine.", showCancelButton: false)
+                    let _ = alert.runModal()
+                    self?.microphoneSwitch.state = .off
+                }
+            }
         }
         viewModel.vmParameters?.microphoneEnabled = sender.state == .on
         viewModel.storeParametersToDisk()
+    }
+    
+    @IBAction func networkPopUpChanged(_ sender: NSPopUpButton) {
+        var networkType = NetworkType.NAT
+        if sender.selectedItem?.title == NetworkType.Bridge.rawValue {
+            networkType = .Bridge
+        }
+        
+        updateBridges()
+        viewModel.vmParameters?.networkType = networkType
+        viewModel.storeParametersToDisk()
+        updateUI()
+    }
+    
+    @IBAction func networkBridgeInterfacePopUpChanged(_ sender: NSPopUpButton) {
+        viewModel.vmParameters?.networkBridge = sender.selectedItem?.title
+        viewModel.storeParametersToDisk()
+    }
+    
+    @objc func networkBridgeInterfaceWillPopUp() {
+        updateBridges()
     }
 
     @objc func updateUI() {
@@ -199,6 +226,7 @@ final class MainViewController: NSViewController {
                 updateLabels(setZero: false)
                 updateCpuCount(vmParameters)
                 updateRam(vmParameters)
+                updateNetwork(vmParameters)
                 updateEnabledState(enabled: true, vmParameters: vmParameters)
             }
         } else {
@@ -208,7 +236,26 @@ final class MainViewController: NSViewController {
             updateEnabledState(enabled: false)
         }
         
+        updateBridges()
         updateOutlineView()
+    }
+    
+    fileprivate func updateBridges() {
+        networkBridgePopUpButton.removeAllItems()
+        var i = 0
+        let selectedBridge = viewModel.vmParameters?.networkBridge
+        for interface in VZBridgedNetworkInterface.networkInterfaces {
+            networkBridgePopUpButton.insertItem(withTitle: interface.description, at: i)
+            i += 1
+            if selectedBridge == interface.description {
+                networkBridgePopUpButton.selectItem(at: i)
+                viewModel.vmParameters?.networkBridge = interface.description
+            }
+        }
+        
+        if networkBridgePopUpButton.selectedItem == nil {
+            networkBridgePopUpButton.selectItem(at: 0)
+        }
     }
     
     func showErrorAlert(error: Error) {
@@ -266,6 +313,23 @@ final class MainViewController: NSViewController {
         ramSlider.isEnabled = true
     }
     
+    fileprivate func updateNetwork(_ vmParameters: VMParameters) {
+        switch vmParameters.networkType {
+        case .NAT:
+            networkPopUpButton.selectItem(at: 0)
+        case .Bridge:
+            networkPopUpButton.selectItem(at: 1)
+        default:
+            networkPopUpButton.selectItem(at: 0)
+        }
+        
+        if vmParameters.networkType == .NAT {
+            networkBridgePopUpButton.isHidden = true
+        } else {
+            networkBridgePopUpButton.isHidden = false
+        }
+    }
+    
     fileprivate func updateLabels(setZero: Bool) {
         let cpuCount = Int(round(cpuCountSlider.doubleValue))
         let memorySizeInGB = Int(round(ramSlider.doubleValue))
@@ -311,21 +375,6 @@ final class MainViewController: NSViewController {
         newWindow.makeKeyAndOrderFront(nil)
         if let parentFrame = view.window?.frame {
             newWindow.setFrame(parentFrame.offsetBy(dx: 90, dy: -10), display: true)
-        }
-    }
-
-    fileprivate func checkMicrophonePermission() {
-        AVCaptureDevice.requestAccess(for: .audio) { granted in
-            Logger.shared.log(level: .default, "audio support in the vm enabled: \(granted)")
-            if !granted {
-                DispatchQueue.main.async { [weak self] in
-                    let alert = NSAlert.okCancelAlert(messageText: "Microphone Permission", informativeText: "Please allow microphone access in System Settings → Privacy → Camera and Microphone to use audio input in the virtual machine.", showCancelButton: false)
-                    let _ = alert.runModal()
-                    self?.microphoneSwitch.state = .off
-                    self?.viewModel.vmParameters?.microphoneEnabled = false
-                    self?.viewModel.storeParametersToDisk()
-                }
-            }
         }
     }
     

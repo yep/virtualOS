@@ -27,6 +27,8 @@ struct VMParameters: Codable {
     var microphoneEnabled = true
     var sharedFolderURL: URL?
     var sharedFolderData: Data?
+    var networkType: NetworkType?
+    var networkBridge: String?
     var macAddress = VZMACAddress.randomLocallyAdministered().string
     var version = ""
     
@@ -49,6 +51,8 @@ struct VMParameters: Codable {
         microphoneEnabled = try container.decode(Bool.self, forKey: .microphoneEnabled)
         sharedFolderURL   = try container.decodeIfPresent(URL.self, forKey: .sharedFolderURL) ?? nil // optional
         sharedFolderData  = try container.decodeIfPresent(Data.self, forKey: .sharedFolderData) ?? nil // optional
+        networkType       = try container.decodeIfPresent(NetworkType.self, forKey: .networkType) ?? NetworkType.NAT 
+        networkBridge     = try container.decodeIfPresent(String.self, forKey: .networkBridge) ?? "" // optional
         macAddress        = try container.decodeIfPresent(String.self, forKey: .macAddress) ?? VZMACAddress.randomLocallyAdministered().string // optional
         version           = try container.decodeIfPresent(String.self, forKey: .version) ?? "" // optional
 

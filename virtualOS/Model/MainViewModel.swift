@@ -7,6 +7,8 @@
 //
 
 import AppKit
+import AVFoundation // for microphone support
+import OSLog
 
 #if arch(arm64)
 
@@ -61,6 +63,18 @@ final class MainViewModel {
             }
         }
     }
+    
+    func checkMicrophonePermission(completion: @escaping () -> Void) {
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            // Logger.shared.log(level: .default, "audio support in the vm enabled: \(granted)")
+            if !granted {
+                self.vmParameters?.microphoneEnabled = false
+                self.storeParametersToDisk()
+                completion()
+            }
+        }
+    }
+
 }
 
 #endif

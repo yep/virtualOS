@@ -1,11 +1,12 @@
 //
-//  Errors.swift
+//  Enums.swift
 //  virtualOS
 //
 //  Created by Jahn Bertsch.
 //  Licensed under the Apache License, see LICENSE file.
 //
 
-struct RestoreError: Error {
-    var localizedDescription = "Restore Error"
+enum NetworkType: String, CaseIterable, Codable {
+    case NAT
+    case Bridge
 }
