@@ -248,6 +248,7 @@ final class MainViewController: NSViewController {
     fileprivate func invalidBundleOrInstallIncomplete() {
         updateLabels(setZero: true)
         updateEnabledState(enabled: false)
+        windowController?.updateButtons(hidden: false)
     }
     
     fileprivate func updateBridges() {
