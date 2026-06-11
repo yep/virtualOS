@@ -29,6 +29,7 @@ final class RestoreImageViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(reloadTable), name: Constants.didChangeAppSettingsNotification, object: nil)
     }
     
@@ -71,7 +72,9 @@ final class RestoreImageViewController: NSViewController {
         tableView.reloadData()
     }
     
-    fileprivate func updateUI() {
+    @objc func updateUI() {
+        tableView.reloadData()
+        
         let restoreImageCount = restoreImages.count
         if restoreImageCount == 0 {
             infoTextField.stringValue = "No restore image available, download latest image."
@@ -81,7 +84,7 @@ final class RestoreImageViewController: NSViewController {
             let name = restoreImages[tableView.selectedRow]
             let url = URL.restoreImagesDirectoryURL.appendingPathComponent(name)
             VZMacOSRestoreImage.load(from: url) { result in
-                DispatchQueue.main.async { [weak self] in
+                DispatchQueue.main.async { [weak self = self] in
                     var info = ""
                     switch result {
                     case .success(let restoreImage):
