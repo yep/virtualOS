@@ -11,7 +11,8 @@ import AppKit
 struct Constants {
     static let restoreImageNameLatest = "latest"
     static let selectedRestoreImage   = "selectedRestoreImage"
-    static let defaultDiskImageSize   = 30
+    static let minimumDiskImageSize   = 30
+    static let defaultDiskImageSize   = 50
     static let restoreImageNameSelectedNotification = Notification.Name("restoreImageSelected")
     static let didChangeAppSettingsNotification     = Notification.Name("didChangeAppSettings")
     

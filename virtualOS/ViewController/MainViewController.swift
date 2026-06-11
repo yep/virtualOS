@@ -29,7 +29,6 @@ final class MainViewController: NSViewController {
     
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
-    fileprivate var diskImageSize = 1
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
     }
@@ -143,21 +142,18 @@ final class MainViewController: NSViewController {
                 let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
                 accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
                 
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.defaultDiskImageSize) GB.", accessoryView: accessoryView)
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, \(Constants.defaultDiskImageSize) GB is recommended.", accessoryView: accessoryView)
                 let modalResponse = alert.runModal()
                 accessoryView.becomeFirstResponder()
-                
+
                 if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
-                    diskImageSize = Int(accessoryView.intValue)
+                    UserDefaults.standard.diskSize = Int(accessoryView.intValue)
                 } else {
                     return // cancel install
                 }
-                if diskImageSize < Constants.defaultDiskImageSize {
-                    self.diskImageSize = Constants.defaultDiskImageSize
-                }
             }
             
-            showSheet(restoreImageName: restoreImageName, diskImageSize: self.diskImageSize)
+            showSheet(restoreImageName: restoreImageName)
         }
     }
     
@@ -203,6 +199,7 @@ final class MainViewController: NSViewController {
     @objc func networkBridgeInterfaceWillPopUp() {
         updateBridges()
     }
+    
     @objc func updateUI() {
         self.tableView.reloadData()
         
@@ -369,7 +366,7 @@ final class MainViewController: NSViewController {
         updateLabels(setZero: false)
     }
     
-    fileprivate func showSheet(restoreImageName: String, diskImageSize: Int)  {
+    fileprivate func showSheet(restoreImageName: String)  {
         if let progressWindowController = mainStoryBoard.instantiateController(withIdentifier: "ProgressWindowController") as? NSWindowController,
            let progressWindow = progressWindowController.window,
            let progressViewController = progressWindow.contentViewController as? ProgressViewController
@@ -377,7 +374,7 @@ final class MainViewController: NSViewController {
             if restoreImageName == Constants.restoreImageNameLatest {
                 progressViewController.startDownload()
             } else {
-                progressViewController.startInstall(restoreImageName: restoreImageName, diskImageSize: diskImageSize)
+                progressViewController.startInstall(restoreImageName: restoreImageName, diskImageSize: UserDefaults.standard.diskSize)
             }
             presentAsSheet(progressViewController)
         } else {

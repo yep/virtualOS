@@ -19,12 +19,21 @@ extension UserDefaults {
     var diskSize: Int {
         get {
             if object(forKey: Self.diskSizeKey) != nil {
-                return integer(forKey: Self.diskSizeKey)
+                let diskSize = integer(forKey: Self.diskSizeKey)
+                if diskSize < Constants.minimumDiskImageSize {
+                    return Constants.minimumDiskImageSize
+                } else {
+                    return diskSize
+                }
             }
             return Constants.defaultDiskImageSize
         }
         set {
-            set(newValue, forKey: Self.diskSizeKey)
+            if newValue < Constants.minimumDiskImageSize {
+                set(Constants.minimumDiskImageSize, forKey: Self.diskSizeKey)
+            } else {
+                set(newValue, forKey: Self.diskSizeKey)
+            }
             synchronize()
         }
     }
