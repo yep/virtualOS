@@ -7,18 +7,13 @@
 //
 
 import Cocoa
-import Virtualization
 import OSLog
+import Virtualization
 
-#if arch(arm64)
-
-final class MainViewController: NSViewController {
+class MainViewControllerBase: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var vmNameTextField: NSTextField!
     @IBOutlet weak var parameterOutlineView: NSOutlineView!
-    @IBOutlet weak var startButton: NSButton!
-    @IBOutlet weak var sharedFolderButton: NSButton!
-    @IBOutlet weak var deleteButton: NSButton!
     @IBOutlet weak var cpuCountLabel: NSTextField!
     @IBOutlet weak var cpuCountSlider: NSSlider!
     @IBOutlet weak var ramLabel: NSTextField!
@@ -26,11 +21,29 @@ final class MainViewController: NSViewController {
     @IBOutlet weak var microphoneSwitch: NSSwitch!
     @IBOutlet weak var networkPopUpButton: NSPopUpButton!
     @IBOutlet weak var networkBridgePopUpButton: NSPopUpButton!
-    
+}
+
+#if arch(arm64)
+
+final class MainViewController: MainViewControllerBase {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
+    }
+    
+    fileprivate func updateEnabledState(enabled: Bool, vmParameters: VMParameters? = nil) {
+        ramSlider.isEnabled                = enabled
+        cpuCountSlider.isEnabled           = enabled
+        vmNameTextField.isEnabled          = enabled
+        microphoneSwitch.isEnabled         = enabled
+        networkPopUpButton.isEnabled       = enabled
+        networkBridgePopUpButton.isEnabled = enabled
+        if vmParameters?.microphoneEnabled ?? false {
+            microphoneSwitch.state = .on
+        } else {
+            microphoneSwitch.state = .off
+        }
     }
     
     override func viewDidLoad() {
@@ -142,7 +155,7 @@ final class MainViewController: NSViewController {
                 let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
                 accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
                 
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, \(Constants.defaultDiskImageSize) GB is recommended.", accessoryView: accessoryView)
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, recommended is \(Constants.defaultDiskImageSize) GB or more.", accessoryView: accessoryView)
                 let modalResponse = alert.runModal()
                 accessoryView.becomeFirstResponder()
 
@@ -167,8 +180,8 @@ final class MainViewController: NSViewController {
     
     @IBAction func microphoneSwitchToggled(_ sender: NSSwitch) {
         if sender.state == .on {
-            viewModel.checkMicrophonePermission {
-                DispatchQueue.main.async { [weak self] in
+            viewModel.checkMicrophonePermission { [weak self] in
+                DispatchQueue.main.async {
                     let alert = NSAlert.okCancelAlert(messageText: "Microphone Permission", informativeText: "Please allow microphone access in System Settings → Privacy → Camera and Microphone to use audio input in the virtual machine.", showCancelButton: false)
                     let _ = alert.runModal()
                     self?.microphoneSwitch.state = .off
@@ -295,21 +308,7 @@ final class MainViewController: NSViewController {
     }
     
     // MARK: - Private
-    
-    fileprivate func updateEnabledState(enabled: Bool, vmParameters: VMParameters? = nil) {
-        ramSlider.isEnabled                = enabled
-        cpuCountSlider.isEnabled           = enabled
-        vmNameTextField.isEnabled          = enabled
-        microphoneSwitch.isEnabled         = enabled
-        networkPopUpButton.isEnabled       = enabled
-        networkBridgePopUpButton.isEnabled = enabled
-        if vmParameters?.microphoneEnabled ?? false {
-            microphoneSwitch.state = .on
-        } else {
-            microphoneSwitch.state = .off
-        }
-    }
-    
+        
     fileprivate func updateCpuCount(_ vmParameters: VMParameters) {
         cpuCountSlider.minValue = Double(vmParameters.cpuCountMin)
         cpuCountSlider.maxValue = Double(vmParameters.cpuCountMax)
@@ -442,27 +441,16 @@ extension MainViewController: NSWindowDelegate  {
 
 // minimum implementation used for intel cpus
 
-final class MainViewController: NSViewController {
-    @IBOutlet weak var vmNameTextField: NSTextField!
-    @IBOutlet weak var installButton: NSButton!
-    @IBOutlet weak var startButton: NSButton!
-    @IBOutlet weak var sharedFolderButton: NSButton!
-    @IBOutlet weak var deleteButton: NSButton!
-    @IBOutlet weak var cpuCountLabel: NSTextField!
-    @IBOutlet weak var cpuCountSlider: NSSlider!
-    @IBOutlet weak var ramLabel: NSTextField!
-    @IBOutlet weak var ramSlider: NSSlider!
-    
+final class MainViewController: MainViewControllerBase {
     override func viewWillAppear() {
         super.viewWillAppear()
         vmNameTextField.stringValue = "Virtualization requires an Apple Silicon machine"
         vmNameTextField.isEditable = false
-        installButton.isEnabled = false
-        startButton.isEnabled = false
-        sharedFolderButton.isEnabled = false
-        deleteButton.isEnabled = false
         cpuCountSlider.isEnabled = false
         ramSlider.isEnabled = false
+        microphoneSwitch.isEnabled = false
+        networkPopUpButton.isEnabled = false
+        networkBridgePopUpButton.isEnabled = false
         cpuCountLabel.stringValue = ""
         ramLabel.stringValue = ""
     }

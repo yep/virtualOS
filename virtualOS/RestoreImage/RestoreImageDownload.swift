@@ -81,7 +81,7 @@ final class RestoreImageDownload {
                 } else {
                     progressString = "\(Int(downloadTask.progress.fractionCompleted * 100))%"
                 }
-                Logger.shared.log(level: .debug, "download progress: \(progressString)")
+//                Logger.shared.log(level: .debug, "download progress: \(progressString)")
                 
                 self?.delegate?.progress(downloadTask.progress.fractionCompleted, progressString: "\(restoreImage.operatingSystemVersionString)\nDownloading \(progressString)")
 

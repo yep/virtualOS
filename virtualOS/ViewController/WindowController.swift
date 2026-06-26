@@ -54,4 +54,8 @@ class WindowController: NSWindowController {
     }
 }
 
+#else
+
+class WindowController: NSWindowController {}
+
 #endif
