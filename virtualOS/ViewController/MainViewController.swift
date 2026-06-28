@@ -96,7 +96,9 @@ final class MainViewController: MainViewControllerBase {
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        startVM()
+        if viewModel.vmParameters?.installFinished == true {
+            startVM()
+        }
     }
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
@@ -127,6 +129,10 @@ final class MainViewController: MainViewControllerBase {
     }
     
     @IBAction func sharedFolderButtonPressed(_ sender: Any) {
+        guard viewModel.vmParameters?.installFinished == true else {
+            return
+        }
+        
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = false
         openPanel.canChooseDirectories = true
@@ -149,21 +155,20 @@ final class MainViewController: MainViewControllerBase {
     
     @objc func restoreImageSelected(notification: Notification) {
         if let userInfo = notification.userInfo,
-           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String
+           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String,
+           restoreImageName != Constants.restoreImageNameLatest
         {
-            if restoreImageName != Constants.restoreImageNameLatest {
-                let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
-                accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
-                
-                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, recommended is \(Constants.defaultDiskImageSize) GB or more.", accessoryView: accessoryView)
-                let modalResponse = alert.runModal()
-                accessoryView.becomeFirstResponder()
+            let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
+            accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
+            
+            let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, recommended is \(Constants.defaultDiskImageSize) GB or more.", accessoryView: accessoryView)
+            let modalResponse = alert.runModal()
+            accessoryView.becomeFirstResponder()
 
-                if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
-                    UserDefaults.standard.diskSize = Int(accessoryView.intValue)
-                } else {
-                    return // cancel install
-                }
+            if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
+                UserDefaults.standard.diskSize = Int(accessoryView.intValue)
+            } else {
+                return // cancel install
             }
             
             showSheet(restoreImageName: restoreImageName)

@@ -8,6 +8,7 @@
 
 import Virtualization
 import StoreKit
+import AccessoryAccess // for usb passthrough
 import OSLog
 
 #if arch(arm64)
@@ -34,6 +35,7 @@ final class VMViewController: NSViewController {
                 switch result {
                 case .success:
                     Logger.shared.log(level: .default, "vm started")
+                    self?.setupUSBPassthrough()
                 case .failure(let error):
                     self?.show(errorString: "Starting VM failed: \(error.localizedDescription)")
                 }
@@ -97,6 +99,19 @@ final class VMViewController: NSViewController {
         }
     }
     
+    func setupUSBPassthrough() {
+        if #available(macOS 27.0, *) {
+            let criteria: [AAUSBAccessoryMatchingCriteria] = []
+            Task {
+                if let accessories = try? await AAUSBAccessoryManager.shared.registerListener(self, matchingCriteria: criteria) {
+                    for accessory in accessories {
+                        usbAccessoryDidConnect(accessory)
+                    }
+                }
+            }
+        }
+    }
+    
     fileprivate func show(errorString: String) {
         Logger.shared.log(level: .default, "\(errorString)")
         DispatchQueue.main.async { [weak self] in
@@ -112,6 +127,29 @@ extension VMViewController: VZVirtualMachineDelegate {
     
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: any Error) {
         show(errorString: "Guest did stop with error: \(error.localizedDescription)")
+    }
+}
+
+@available(macOS 27.0, *)
+extension VMViewController: AAUSBAccessoryListener {
+    func usbAccessoryDidConnect(_ usbAccessory: AAUSBAccessory) {
+        queue.async { [weak self] in
+            do {
+                let configuration = VZUSBPassthroughDeviceConfiguration(device: usbAccessory)
+                let device = try VZUSBPassthroughDevice(configuration: configuration)
+                self?.vm?.usbControllers.first?.attach(device: device) { error in
+                    if let error {
+                        Logger.shared.log(level: .default, "usbAccessoryDidConnect: \(error)")
+                    }
+                }
+            } catch {
+                Logger.shared.log(level: .default, "usbAccessoryDidConnect: \(error)")
+            }
+        }
+    }
+    
+    func usbAccessoryDidDisconnect(_ usbAccessory: AAUSBAccessory) {
+        // Logger.shared.log(level: .default, "usbAccessoryDidDisconnect")
     }
 }
 
