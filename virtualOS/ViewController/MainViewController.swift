@@ -60,6 +60,7 @@ final class MainViewController: MainViewControllerBase {
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSControl.textDidEndEditingNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: Constants.didChangeAppSettingsNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(restoreImageSelected), name: Constants.restoreImageNameSelectedNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(guestProvisioningSelected), name: Constants.guestProvisioningdNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(networkBridgeInterfaceWillPopUp), name: NSPopUpButton.willPopUpNotification, object: nil)
         
         ramSlider.target = self
@@ -155,23 +156,51 @@ final class MainViewController: MainViewControllerBase {
     
     @objc func restoreImageSelected(notification: Notification) {
         if let userInfo = notification.userInfo,
-           let restoreImageName = userInfo[Constants.selectedRestoreImage] as? String,
+           let restoreImageName = userInfo[Constants.selectedRestoreImageKey] as? String,
+           let supportsGuestProvisioning = userInfo[Constants.provisioningInfoKey] as? Bool,
            restoreImageName != Constants.restoreImageNameLatest
         {
-            let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
-            accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
-            
-            let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, recommended is \(Constants.defaultDiskImageSize) GB or more.", accessoryView: accessoryView)
-            let modalResponse = alert.runModal()
-            accessoryView.becomeFirstResponder()
-
-            if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
-                UserDefaults.standard.diskSize = Int(accessoryView.intValue)
+            if #available(macOS 27.0, *),
+               supportsGuestProvisioning
+            {
+                if let provisioningViewController = mainStoryBoard.instantiateController(withIdentifier: "ProvisioningViewController") as? ProvisioningViewController
+                {
+                    provisioningViewController.restoreImageName = restoreImageName
+                    show(viewController: provisioningViewController, title: "Provisioning")
+                } else {
+                    Logger.shared.log(level: .default, "show provisioning window failed")
+                }
             } else {
-                return // cancel install
+                let accessoryView = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 20))
+                accessoryView.stringValue = "\(UserDefaults.standard.diskSize)"
+                
+                let alert = NSAlert.okCancelAlert(messageText: "Disk Image Size in GB", informativeText: "Disk size can not be changed after VM is created. Minimum disk size is \(Constants.minimumDiskImageSize) GB, recommended is \(Constants.defaultDiskImageSize) GB or more.", accessoryView: accessoryView)
+                let modalResponse = alert.runModal()
+                accessoryView.becomeFirstResponder()
+
+                if modalResponse == .OK || modalResponse == .alertFirstButtonReturn  {
+                    UserDefaults.standard.diskSize = Int(accessoryView.intValue)
+                } else {
+                    return // cancel install
+                }
+                
+                showSheet(restoreImageName: restoreImageName)
             }
-            
-            showSheet(restoreImageName: restoreImageName)
+        }
+    }
+    
+    @objc func guestProvisioningSelected(notification: Notification) {
+        if let userInfo = notification.userInfo,
+           let restoreImageName = userInfo[Constants.selectedRestoreImageKey] as? String {
+            if let provisioningInfoData = userInfo[Constants.provisioningInfoKey] as? Data {
+                let decoder = PropertyListDecoder()
+                if let provisioningInfo = try? decoder.decode(ProvisioningInfo.self, from: provisioningInfoData) {
+                    self.viewModel.provisioningInfo = provisioningInfo
+                    showSheet(restoreImageName: restoreImageName)
+                }
+            } else {
+                showSheet(restoreImageName: restoreImageName)
+            }
         }
     }
     
@@ -401,6 +430,7 @@ final class MainViewController: MainViewControllerBase {
         {
             vmViewController.vmBundle = viewModel.vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
+            vmViewController.provisioningInfo = viewModel.provisioningInfo
             show(viewController: vmViewController, title: viewModel.vmBundle?.name ?? "virtualOS VM")
         } else {
             Logger.shared.log(level: .default, "show vm window failed")

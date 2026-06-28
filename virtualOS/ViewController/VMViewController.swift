@@ -20,25 +20,28 @@ final class VMViewController: NSViewController {
     
     var vmBundle: VMBundle?
     var vmParameters: VMParameters?
+    var provisioningInfo: ProvisioningInfo?
     fileprivate var vmConfiguration: VMConfiguration?
     fileprivate var vm: VZVirtualMachine?
     fileprivate let queue = DispatchQueue.global(qos: .userInteractive)
-
+    fileprivate var guestDidStop = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         statusLabel.stringValue = ""
 
         createVM()
         
-        queue.async { [weak self] in
-            self?.vm?.start { (result: Result<Void, Error>) in
-                switch result {
-                case .success:
-                    Logger.shared.log(level: .default, "vm started")
-                    self?.setupUSBPassthrough()
-                case .failure(let error):
-                    self?.show(errorString: "Starting VM failed: \(error.localizedDescription)")
-                }
+        let startOptionsResult = startOptions()
+        switch startOptionsResult {
+        case .failure(let error):
+            show(errorString: "Guest provisioning failed: \(error.localizedDescription)")
+            return
+        case .success(let startOptions):
+            if let startOptions {
+                startWithGuestProvisioning(startOptions)
+            } else {
+                start()
             }
         }
     }
@@ -58,7 +61,7 @@ final class VMViewController: NSViewController {
     }
     
     // MARK: - Private
-    
+
     fileprivate func createVM() {
         guard let bundleURL = vmBundle?.url,
               let vmParameters = vmParameters else
@@ -92,6 +95,7 @@ final class VMViewController: NSViewController {
             vmView.virtualMachine = vm
             vmView.automaticallyReconfiguresDisplay = true
             vmView.capturesSystemKeys = true
+
             self.vm = vm
         } else {
             show(errorString: "Could not create platform configuration.")
@@ -99,7 +103,58 @@ final class VMViewController: NSViewController {
         }
     }
     
-    func setupUSBPassthrough() {
+    fileprivate func startOptions() -> Result<VZVirtualMachineStartOptions?, Error> {
+        if #available(macOS 27.0, *),
+           let provisioningInfo
+        {
+            let provisioningOptions = VZMacGuestProvisioningOptions()
+            provisioningOptions.fullName = provisioningInfo.fullName
+            provisioningOptions.username = provisioningInfo.username
+            provisioningOptions.password = provisioningInfo.password
+            provisioningOptions.logsInAutomatically = provisioningInfo.autoLogin
+            provisioningOptions.enablesRemoteLogin = provisioningInfo.remoteLogin
+            
+            let startOptions = VZMacOSVirtualMachineStartOptions()
+            do {
+                try startOptions.setGuestProvisioning(provisioningOptions)
+            } catch let error {
+                return .failure(error)
+            }
+            return .success(startOptions)
+        }
+        
+        return .success(nil)
+    }
+    
+    fileprivate func startWithGuestProvisioning(_ startOptions: VZVirtualMachineStartOptions) {
+        queue.async { [weak self] in
+            self?.vm?.start(options: startOptions) { error in
+                if let error {
+                    self?.show(errorString: "Starting VM with guest provisioning failed: \(error.localizedDescription) You can start the VM again for manual setup.")
+                } else {
+                    self?.started()
+                }
+            }
+        }
+    }
+    
+    fileprivate func start() {
+        // start without guest provisioning
+        queue.async { [weak self] in
+            self?.vm?.start() { (result: Result<Void, Error>) in
+                switch result {
+                case .success:
+                    self?.started()
+                case .failure(let error):
+                    self?.show(errorString: "Starting VM failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    fileprivate func started() {
+        Logger.shared.log(level: .default, "vm started")
+        
         if #available(macOS 27.0, *) {
             let criteria: [AAUSBAccessoryMatchingCriteria] = []
             Task {
@@ -123,10 +178,12 @@ final class VMViewController: NSViewController {
 extension VMViewController: VZVirtualMachineDelegate {
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         show(errorString: "Guest did stop")
+        guestDidStop = true
     }
     
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: any Error) {
         show(errorString: "Guest did stop with error: \(error.localizedDescription)")
+        guestDidStop = true
     }
 }
 
@@ -155,14 +212,18 @@ extension VMViewController: AAUSBAccessoryListener {
 
 extension VMViewController: NSWindowDelegate  {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM?", alertStyle: .warning)
-        let selection = alert.runModal()
-        if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
-           selection == NSApplication.ModalResponse.OK
-        {
+        if guestDidStop {
             return true
         } else {
-            return false
+            let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM?", alertStyle: .warning)
+            let selection = alert.runModal()
+            if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
+               selection == NSApplication.ModalResponse.OK
+            {
+                return true
+            } else {
+                return false
+            }
         }
     }
 }

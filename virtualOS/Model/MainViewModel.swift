@@ -20,6 +20,7 @@ final class MainViewModel {
     var vmBundle: VMBundle?
     var selectedRow: Int? = 0
     var vmParameters: VMParameters?
+    var provisioningInfo: ProvisioningInfo?
     
     init() {
         parametersViewDataSource.mainViewModel = self
