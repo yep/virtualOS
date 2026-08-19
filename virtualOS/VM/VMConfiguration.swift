@@ -12,8 +12,14 @@ import Virtualization
 import AVFoundation // for microphone support
 import OSLog
 
+#if arch(arm64)
+import DiskImageKit
+#endif
+
 final class VMConfiguration: VZVirtualMachineConfiguration {
-    func setup(parameters: VMParameters, macPlatformConfiguration: VZMacPlatformConfiguration, bundleURL: URL) {
+    private var snapshotModel: AnyObject?
+    
+    func setup(parameters: VMParameters, macPlatformConfiguration: VZMacPlatformConfiguration, bundleURL: URL) throws {
         cpuCount        = parameters.cpuCount
         memorySize      = parameters.memorySizeInGB.gigabytesToBytes()
         pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
@@ -23,7 +29,7 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         
         configureAudioDevice(parameters: parameters)
         configureGraphicsDevice(parameters: parameters)
-        configureStorageDevice(parameters: parameters, bundleURL: bundleURL)
+        try configureStorageDevice(parameters: parameters, bundleURL: bundleURL)
         configureNetworkDevices(parameters: parameters)
         configureSharedFolder(parameters: parameters)
         configureClipboardSharing()
@@ -80,25 +86,27 @@ final class VMConfiguration: VZVirtualMachineConfiguration {
         graphicsDevices = [graphicsDevice]
     }
     
-    fileprivate func configureStorageDevice(parameters: VMParameters, bundleURL: URL) {
+    fileprivate func configureStorageDevice(parameters: VMParameters, bundleURL: URL) throws {
+        if #available(macOS 27.0, *), SnapshotModel.isSnapshotCapable(bundleURL: bundleURL) {
+            let snapshotModel = SnapshotModel(bundleURL: bundleURL)
+            let image = try snapshotModel.openActiveImage()
+            let attachment = try VZDiskImageStorageDeviceAttachment(diskImage: image)
+            storageDevices = [VZVirtioBlockDeviceConfiguration(attachment: attachment)]
+            self.snapshotModel = snapshotModel
+            return
+        }
+
         let diskImageStorageDeviceAttachment: VZDiskImageStorageDeviceAttachment?
         do {
             diskImageStorageDeviceAttachment = try VZDiskImageStorageDeviceAttachment(url: bundleURL.diskImageURL, readOnly: false)
         } catch let error {
             Logger.shared.log(level: .default, "could not create storage device: \(error.localizedDescription)")
-            return
+            throw error
         }
         
         if let diskImageStorageDeviceAttachment {
             let blockDeviceConfiguration = VZVirtioBlockDeviceConfiguration(attachment: diskImageStorageDeviceAttachment)
             storageDevices = [blockDeviceConfiguration]
-        }
-
-        if let diskImageStorageDeviceAttachment = try? VZDiskImageStorageDeviceAttachment(url: bundleURL.diskImageURL, readOnly: false) {
-            let blockDeviceConfiguration = VZVirtioBlockDeviceConfiguration(attachment: diskImageStorageDeviceAttachment)
-            storageDevices = [blockDeviceConfiguration]
-        } else {
-            Logger.shared.log(level: .default, "could not create storage device")
         }
     }
     

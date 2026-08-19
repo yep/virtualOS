@@ -86,15 +86,32 @@ final class RestoreImageInstall {
             
             if let diskImageSize = diskImageSize {
                 vmParameters.diskSizeInGB = UInt64(diskImageSize)
-                let restoreResult = createDiskImage(diskImageURL: bundleURL.diskImageURL, sizeInGB: UInt64(vmParameters.diskSizeInGB))
-                if case .failure(let restoreError) = restoreResult {
-                    delegate?.done(error: restoreError)
-                    return
+                if #available(macOS 27.0, *) {
+                    do {
+                        _ = try SnapshotModel.createBaseImage(
+                            bundleURL: bundleURL,
+                            sizeInBytes: vmParameters.diskSizeInGB.gigabytesToBytes()
+                        )
+                    } catch {
+                        delegate?.done(error: error)
+                        return
+                    }
+                } else {
+                    let restoreResult = createDiskImage(diskImageURL: bundleURL.diskImageURL, sizeInGB: UInt64(vmParameters.diskSizeInGB))
+                    if case .failure(let restoreError) = restoreResult {
+                        delegate?.done(error: restoreError)
+                        return
+                    }
                 }
             }
             
             vmConfiguration.setDefault(parameters: &vmParameters)
-            vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+            do {
+                try vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+            } catch {
+                delegate?.done(error: error)
+                return
+            }
         } else {
             delegate?.done(error: RestoreError(localizedDescription: "Could not create mac platform configuration."))
             return

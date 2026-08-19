@@ -24,6 +24,14 @@ final class ProvisioningViewController: NSViewController {
         super.viewDidLoad()
         diskSizeTextField.delegate = self
     }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        view.window?.autorecalculatesKeyViewLoop = false
+        diskSizeTextField.nextKeyView = fullNameTextField
+        fullNameTextField.nextKeyView = usernameTextField
+        usernameTextField.nextKeyView = passwordSecureTextField
+    }
     
     @IBAction func guestProvsioningSwitched(_ sender: NSSwitch) {
         set(enabled: guestProvisioningSwitch.state == .on)
@@ -74,6 +82,19 @@ final class ProvisioningViewController: NSViewController {
 }
 
 extension ProvisioningViewController: NSTextFieldDelegate {
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control == diskSizeTextField,
+              commandSelector == #selector(NSResponder.insertTab(_:)) else
+        {
+            return false
+        }
+
+        guestProvisioningSwitch.state = .on
+        set(enabled: true)
+        view.window?.makeFirstResponder(fullNameTextField)
+        return true
+    }
+
     func controlTextDidChange(_ notification: Notification) {
         guard let field = notification.object as? NSTextField else { return }
         

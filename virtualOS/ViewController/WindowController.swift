@@ -14,6 +14,7 @@ import OSLog
 class WindowController: NSWindowController {
     @IBOutlet weak var toolbar: NSToolbar!
     @IBOutlet weak var installButton: NSToolbarItem!
+    @IBOutlet weak var snapshotButton: NSToolbarItem!
     @IBOutlet weak var startButton: NSToolbarItem!
     @IBOutlet weak var sharedFolderButton: NSToolbarItem!
     @IBOutlet weak var deleteButton: NSToolbarItem!
@@ -32,6 +33,10 @@ class WindowController: NSWindowController {
     @IBAction func startButtonPressed(_ sender: NSButton) {
         mainViewController?.startButtonPressed(sender)
     }
+
+    @IBAction func snapshotButtonPressed(_ sender: NSToolbarItem) {
+        mainViewController?.snapshotButtonPressed(sender)
+    }
     
     @IBAction func sharedFolderButtonPressed(_ sender: NSButton) {
         mainViewController?.sharedFolderButtonPressed(sender)
@@ -47,9 +52,10 @@ class WindowController: NSWindowController {
                 toolbar.removeItem(at: 1)
             }
         } else if toolbar.items.count == 1 {
-            toolbar.insertItem(withItemIdentifier: startButton.itemIdentifier, at: 1)
-            toolbar.insertItem(withItemIdentifier: sharedFolderButton.itemIdentifier, at: 2)
-            toolbar.insertItem(withItemIdentifier: deleteButton.itemIdentifier, at: 3)
+            toolbar.insertItem(withItemIdentifier: snapshotButton.itemIdentifier, at: 1)
+            toolbar.insertItem(withItemIdentifier: startButton.itemIdentifier, at: 2)
+            toolbar.insertItem(withItemIdentifier: sharedFolderButton.itemIdentifier, at: 3)
+            toolbar.insertItem(withItemIdentifier: deleteButton.itemIdentifier, at: 4)
         }
     }
 }

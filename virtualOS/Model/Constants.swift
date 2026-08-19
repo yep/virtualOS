@@ -13,7 +13,7 @@ struct Constants {
     static let selectedRestoreImageKey = "selectedRestoreImageKey"
     static let provisioningInfoKey     = "provisioningInfoKey"
     static let minimumDiskImageSize    = 30
-    static let defaultDiskImageSize    = 50
+    static let defaultDiskImageSize    = 100
     static let restoreImageNameSelectedNotification = Notification.Name("restoreImageNameSelectedNotification")
     static let guestProvisioningdNotification       = Notification.Name("guestProvisioningdNotification")
     static let didChangeAppSettingsNotification     = Notification.Name("didChangeAppSettingsNotification")

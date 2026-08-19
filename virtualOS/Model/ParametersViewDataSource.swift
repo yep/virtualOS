@@ -16,7 +16,7 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         if let vmParameters = mainViewModel?.vmParameters {
             if vmParameters.installFinished == true {
-                return 3
+                return 4
             } else {
                 return 1
             }
@@ -37,6 +37,8 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
                     return ["Shared Folder", sharedFolderString]
                 } else if index == 2 {
                     return ["Version", "\(vmParameters.version)"]
+                } else if index == 3 {
+                    return ["Snapshots", snapshotInfo()]
                 }
             }
             
@@ -54,6 +56,19 @@ final class ParametersViewDataSource: NSObject, NSOutlineViewDataSource {
             return bookmarkPath
         }
         return "No shared folder"
+    }
+
+    fileprivate func snapshotInfo() -> String {
+        guard #available(macOS 27.0, *),
+              let bundleURL = mainViewModel?.vmBundle?.url,
+              SnapshotModel.isSnapshotCapable(bundleURL: bundleURL) else
+        {
+            return "Not Supported"
+        }
+        guard let snapshots = try? SnapshotModel(bundleURL: bundleURL).snapshots() else {
+            return "None"
+        }
+        return snapshots.isEmpty ? "None" : "\(snapshots.count)"
     }
 }
 

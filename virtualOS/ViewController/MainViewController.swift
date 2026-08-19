@@ -28,6 +28,7 @@ class MainViewControllerBase: NSViewController {
 final class MainViewController: MainViewControllerBase {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
+    fileprivate var vmWindowOpen = false
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
     }
@@ -97,7 +98,7 @@ final class MainViewController: MainViewControllerBase {
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if viewModel.vmParameters?.installFinished == true {
+        if !vmWindowOpen, viewModel.vmParameters?.installFinished == true {
             startVM()
         }
     }
@@ -110,7 +111,116 @@ final class MainViewController: MainViewControllerBase {
             Logger.shared.log(level: .default, "show restore image window failed")
         }
     }
-    
+
+    @IBAction func snapshotButtonPressed(_ sender: NSToolbarItem) {
+        guard let bundleURL = viewModel.vmBundle?.url,
+              viewModel.vmParameters?.installFinished == true else {
+            return
+        }
+
+        if vmWindowOpen {
+            let alert = NSAlert.okCancelAlert(
+                messageText: "Stop VM First",
+                informativeText: "Stop the VM before creating, restoring, or deleting a snapshot.",
+                showCancelButton: false
+            )
+            alert.runModal()
+            return
+        }
+
+        guard #available(macOS 27.0, *), SnapshotModel.isSnapshotCapable(bundleURL: bundleURL) else {
+            let alert = NSAlert.okCancelAlert(
+                messageText: "Snapshots Not Supported",
+                informativeText: "Snapshots require an ASIF disk image created by virtualOS on macOS 27 or later. This VM uses a legacy 'Disk.img' disk.",
+                showCancelButton: false
+            )
+            alert.runModal()
+            return
+        }
+
+        let menu = NSMenu(title: "Snapshots")
+        menu.addItem(withTitle: "Create Snapshot", action: #selector(createSnapshot(_:)), keyEquivalent: "")
+        menu.addItem(.separator())
+        let snapshotModel = SnapshotModel(bundleURL: bundleURL)
+        switch Result(catching: { (try snapshotModel.snapshots(), try snapshotModel.deletableSnapshotIDs()) }) {
+        case .success(let (snapshots, deletableSnapshotIDs)) where !snapshots.isEmpty:
+            for snapshot in snapshots.reversed() {
+                let date = DateFormatter.localizedString(from: snapshot.createdAt, dateStyle: .short, timeStyle: .short)
+                let restoreItem = menu.addItem(withTitle: "Restore \(snapshot.name) (\(date))", action: #selector(restoreSnapshot(_:)), keyEquivalent: "")
+                restoreItem.representedObject = snapshot.id.uuidString
+                if deletableSnapshotIDs.contains(snapshot.id) {
+                    let deleteItem = menu.addItem(withTitle: "Delete \(snapshot.name) (\(date))", action: #selector(deleteSnapshot(_:)), keyEquivalent: "")
+                    deleteItem.representedObject = snapshot.id.uuidString
+                }
+            }
+            menu.addItem(.separator())
+            if deletableSnapshotIDs.isEmpty {
+                let item = menu.addItem(withTitle: "To delete a snapshot, restore from previous snapshot first", action: nil, keyEquivalent: "")
+                item.isEnabled = false
+            }
+        case .success:
+            let item = menu.addItem(withTitle: "No Snapshots", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+        case .failure(let error):
+            Logger.shared.log(level: .default, "could not load snapshots: \(error.localizedDescription)")
+            return
+        }
+        menu.items.forEach { $0.target = self }
+        guard let window = view.window else { return }
+        let point = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        menu.popUp(positioning: nil, at: point, in: view)
+    }
+
+    @available(macOS 27.0, *)
+    @objc fileprivate func createSnapshot(_ sender: Any?) {
+        performSnapshotOperation { snapshotModel in
+            _ = try snapshotModel.createSnapshot()
+        }
+    }
+
+    @available(macOS 27.0, *)
+    @objc fileprivate func restoreSnapshot(_ sender: NSMenuItem) {
+        guard let identifier = sender.representedObject as? String,
+              let snapshotID = UUID(uuidString: identifier) else { return }
+        let snapshotName = viewModel.vmBundle.flatMap { try? SnapshotModel(bundleURL: $0.url).snapshotName(for: snapshotID) } ?? "selected snapshot"
+        let alert = NSAlert.okCancelAlert(
+            messageText: "Restore \(snapshotName)?",
+            informativeText: "Changes after this snapshot will no longer be the active disk state.",
+            alertStyle: .warning
+        )
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        performSnapshotOperation { snapshotModel in
+            try snapshotModel.restore(snapshotID: snapshotID)
+        }
+    }
+
+    @available(macOS 27.0, *)
+    @objc fileprivate func deleteSnapshot(_ sender: NSMenuItem) {
+        guard let identifier = sender.representedObject as? String,
+              let snapshotID = UUID(uuidString: identifier) else { return }
+        let snapshotName = viewModel.vmBundle.flatMap { try? SnapshotModel(bundleURL: $0.url).snapshotName(for: snapshotID) } ?? "selected snapshot"
+        let alert = NSAlert.okCancelAlert(
+            messageText: "Delete \(snapshotName)?",
+            informativeText: "This cannot be undone.",
+            alertStyle: .warning
+        )
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        performSnapshotOperation { snapshotModel in
+            try snapshotModel.delete(snapshotID: snapshotID)
+        }
+    }
+
+    @available(macOS 27.0, *)
+    fileprivate func performSnapshotOperation(_ operation: (SnapshotModel) throws -> Void) {
+        guard !vmWindowOpen, let bundleURL = viewModel.vmBundle?.url else { return }
+        do {
+            try operation(SnapshotModel(bundleURL: bundleURL))
+            updateUI()
+        } catch {
+            Logger.shared.log(level: .default, "snapshot operation failed: \(error.localizedDescription)")
+        }
+    }
+
     @IBAction func deleteButtonPressed(_ sender: Any) {
         guard let vmBundle = viewModel.vmBundle else {
             return
@@ -273,6 +383,13 @@ final class MainViewController: MainViewControllerBase {
                     updateNetwork(vmParameters)
                     updateEnabledState(enabled: true, vmParameters: vmParameters)
                     windowController?.updateButtons(hidden: false)
+                    windowController?.startButton.isEnabled = !vmWindowOpen
+                    if #available(macOS 27.0, *) {
+                        // Keep this enabled for legacy disks so the user sees why snapshots are unavailable.
+                        windowController?.snapshotButton.isEnabled = true
+                    } else {
+                        windowController?.snapshotButton.isEnabled = false
+                    }
                 } else {
                     invalidBundleOrInstallIncomplete()
                 }
@@ -296,6 +413,7 @@ final class MainViewController: MainViewControllerBase {
         updateLabels(setZero: true)
         updateEnabledState(enabled: false)
         windowController?.updateButtons(hidden: false)
+        windowController?.snapshotButton.isEnabled = false
     }
     
     fileprivate func updateBridges() {
@@ -428,9 +546,15 @@ final class MainViewController: MainViewControllerBase {
     fileprivate func startVM() {
         if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
         {
+            vmWindowOpen = true
+            windowController?.startButton.isEnabled = false
             vmViewController.vmBundle = viewModel.vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
             vmViewController.provisioningInfo = viewModel.provisioningInfo
+            vmViewController.didClose = { [weak self] in
+                self?.vmWindowOpen = false
+                self?.updateUI()
+            }
             show(viewController: vmViewController, title: viewModel.vmBundle?.name ?? "virtualOS VM")
         } else {
             Logger.shared.log(level: .default, "show vm window failed")

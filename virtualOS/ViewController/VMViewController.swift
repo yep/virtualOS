@@ -25,6 +25,7 @@ final class VMViewController: NSViewController {
     fileprivate var vm: VZVirtualMachine?
     fileprivate let queue = DispatchQueue.global(qos: .userInteractive)
     fileprivate var guestDidStop = false
+    var didClose: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -78,7 +79,12 @@ final class VMViewController: NSViewController {
                let macPlatformConfiguration = macPlatformConfiguration
         {
             let vmConfiguration = VMConfiguration()
-            vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+            do {
+                try vmConfiguration.setup(parameters: vmParameters, macPlatformConfiguration: macPlatformConfiguration, bundleURL: bundleURL)
+            } catch {
+                show(errorString: "Failed to configure VM storage: \(error.localizedDescription)")
+                return
+            }
             self.vmConfiguration = vmConfiguration
             
             do {
@@ -154,6 +160,7 @@ final class VMViewController: NSViewController {
 
     fileprivate func started() {
         Logger.shared.log(level: .default, "vm started")
+        guestDidStop = false
         
         if #available(macOS 27.0, *) {
             let criteria: [AAUSBAccessoryMatchingCriteria] = []
@@ -173,6 +180,7 @@ final class VMViewController: NSViewController {
             self?.statusLabel.stringValue = errorString
         }
     }
+
 }
 
 extension VMViewController: VZVirtualMachineDelegate {
@@ -211,6 +219,16 @@ extension VMViewController: AAUSBAccessoryListener {
 }
 
 extension VMViewController: NSWindowDelegate  {
+    func windowWillClose(_ notification: Notification) {
+        vmView.virtualMachine = nil
+        vm = nil
+        vmConfiguration = nil
+        let didClose = didClose
+        DispatchQueue.main.async {
+            didClose?()
+        }
+    }
+
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         if guestDidStop {
             return true
