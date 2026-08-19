@@ -28,7 +28,7 @@ class MainViewControllerBase: NSViewController {
 final class MainViewController: MainViewControllerBase {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
-    fileprivate var vmWindowOpen = false
+    fileprivate var activeVMBundleURLs = Set<URL>()
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
     }
@@ -98,7 +98,7 @@ final class MainViewController: MainViewControllerBase {
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
-        if !vmWindowOpen, viewModel.vmParameters?.installFinished == true {
+        if viewModel.vmParameters?.installFinished == true {
             startVM()
         }
     }
@@ -118,7 +118,7 @@ final class MainViewController: MainViewControllerBase {
             return
         }
 
-        if vmWindowOpen {
+        if activeVMBundleURLs.contains(bundleURL) {
             let alert = NSAlert.okCancelAlert(
                 messageText: "Stop VM First",
                 informativeText: "Stop the VM before creating, restoring, or deleting a snapshot.",
@@ -212,7 +212,8 @@ final class MainViewController: MainViewControllerBase {
 
     @available(macOS 27.0, *)
     fileprivate func performSnapshotOperation(_ operation: (SnapshotModel) throws -> Void) {
-        guard !vmWindowOpen, let bundleURL = viewModel.vmBundle?.url else { return }
+        guard let bundleURL = viewModel.vmBundle?.url,
+              !activeVMBundleURLs.contains(bundleURL) else { return }
         do {
             try operation(SnapshotModel(bundleURL: bundleURL))
             updateUI()
@@ -383,7 +384,7 @@ final class MainViewController: MainViewControllerBase {
                     updateNetwork(vmParameters)
                     updateEnabledState(enabled: true, vmParameters: vmParameters)
                     windowController?.updateButtons(hidden: false)
-                    windowController?.startButton.isEnabled = !vmWindowOpen
+                    windowController?.startButton.isEnabled = !activeVMBundleURLs.contains(vmBundle.url)
                     if #available(macOS 27.0, *) {
                         // Keep this enabled for legacy disks so the user sees why snapshots are unavailable.
                         windowController?.snapshotButton.isEnabled = true
@@ -544,18 +545,24 @@ final class MainViewController: MainViewControllerBase {
     }
     
     fileprivate func startVM() {
+        guard let vmBundle = viewModel.vmBundle,
+              !activeVMBundleURLs.contains(vmBundle.url) else
+        {
+            return
+        }
         if let vmViewController = mainStoryBoard.instantiateController(withIdentifier: "VMViewController") as? VMViewController
         {
-            vmWindowOpen = true
+            activeVMBundleURLs.insert(vmBundle.url)
             windowController?.startButton.isEnabled = false
-            vmViewController.vmBundle = viewModel.vmBundle
+            vmViewController.vmBundle = vmBundle
             vmViewController.vmParameters = viewModel.vmParameters
             vmViewController.provisioningInfo = viewModel.provisioningInfo
+            viewModel.provisioningInfo = nil
             vmViewController.didClose = { [weak self] in
-                self?.vmWindowOpen = false
+                self?.activeVMBundleURLs.remove(vmBundle.url)
                 self?.updateUI()
             }
-            show(viewController: vmViewController, title: viewModel.vmBundle?.name ?? "virtualOS VM")
+            show(viewController: vmViewController, title: vmBundle.name)
         } else {
             Logger.shared.log(level: .default, "show vm window failed")
         }
