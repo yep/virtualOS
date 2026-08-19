@@ -8,7 +8,6 @@
 
 import Virtualization
 import StoreKit
-import AccessoryAccess // for usb passthrough
 import OSLog
 
 #if arch(arm64)
@@ -25,6 +24,7 @@ final class VMViewController: NSViewController {
     fileprivate var vm: VZVirtualMachine?
     fileprivate let queue = DispatchQueue.global(qos: .userInteractive)
     fileprivate var guestDidStop = false
+    private var usbPassthroughStorage: AnyObject? // type erased because usb passthrough requires macOS 27
     var didClose: (() -> Void)?
     
     override func viewDidLoad() {
@@ -54,6 +54,11 @@ final class VMViewController: NSViewController {
     
     override func viewDidAppear() {
         super.viewDidAppear()
+
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.activate(menu: usbMenu)
+            usbPassthrough?.start()
+        }
         
         UserDefaults.standard.userRatingCounter += 1
         if UserDefaults.standard.userRatingCounter.isMultiple(of: 5) {
@@ -103,6 +108,15 @@ final class VMViewController: NSViewController {
             vmView.capturesSystemKeys = true
 
             self.vm = vm
+            if #available(macOS 27.0, *) {
+                usbPassthroughStorage = USBPassthroughController(
+                    virtualMachine: vm,
+                    queue: queue,
+                    ownerID: bundleURL.path,
+                    ownerName: bundleURL.deletingPathExtension().lastPathComponent,
+                    isWindowKey: { [weak self] in self?.view.window?.isKeyWindow == true }
+                )
+            }
         } else {
             show(errorString: "Could not create platform configuration.")
             return
@@ -161,16 +175,8 @@ final class VMViewController: NSViewController {
     fileprivate func started() {
         Logger.shared.log(level: .default, "vm started")
         guestDidStop = false
-        
         if #available(macOS 27.0, *) {
-            let criteria: [AAUSBAccessoryMatchingCriteria] = []
-            Task {
-                if let accessories = try? await AAUSBAccessoryManager.shared.registerListener(self, matchingCriteria: criteria) {
-                    for accessory in accessories {
-                        usbAccessoryDidConnect(accessory)
-                    }
-                }
-            }
+            usbPassthrough?.virtualMachineStarted()
         }
     }
     
@@ -181,45 +187,40 @@ final class VMViewController: NSViewController {
         }
     }
 
+    @available(macOS 27.0, *)
+    private var usbPassthrough: USBPassthroughController? {
+        usbPassthroughStorage as? USBPassthroughController
+    }
+
+    private var usbMenu: NSMenu? {
+        NSApp.mainMenu?.items.first { $0.title == "USB" }?.submenu
+    }
+
 }
 
 extension VMViewController: VZVirtualMachineDelegate {
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         show(errorString: "Guest did stop")
         guestDidStop = true
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.stop()
+        }
     }
     
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: any Error) {
         show(errorString: "Guest did stop with error: \(error.localizedDescription)")
         guestDidStop = true
-    }
-}
-
-@available(macOS 27.0, *)
-extension VMViewController: AAUSBAccessoryListener {
-    func usbAccessoryDidConnect(_ usbAccessory: AAUSBAccessory) {
-        queue.async { [weak self] in
-            do {
-                let configuration = VZUSBPassthroughDeviceConfiguration(device: usbAccessory)
-                let device = try VZUSBPassthroughDevice(configuration: configuration)
-                self?.vm?.usbControllers.first?.attach(device: device) { error in
-                    if let error {
-                        Logger.shared.log(level: .default, "usbAccessoryDidConnect: \(error)")
-                    }
-                }
-            } catch {
-                Logger.shared.log(level: .default, "usbAccessoryDidConnect: \(error)")
-            }
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.stop()
         }
-    }
-    
-    func usbAccessoryDidDisconnect(_ usbAccessory: AAUSBAccessory) {
-        // Logger.shared.log(level: .default, "usbAccessoryDidDisconnect")
     }
 }
 
 extension VMViewController: NSWindowDelegate  {
     func windowWillClose(_ notification: Notification) {
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.close()
+        }
         vmView.virtualMachine = nil
         vm = nil
         vmConfiguration = nil
@@ -233,7 +234,7 @@ extension VMViewController: NSWindowDelegate  {
         if guestDidStop {
             return true
         } else {
-            let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM? All unsaved changes will be lost.", alertStyle: .warning)
+            let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM?\nAll unsaved changes will be lost.", alertStyle: .warning)
             let selection = alert.runModal()
             if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
                selection == NSApplication.ModalResponse.OK
@@ -242,6 +243,18 @@ extension VMViewController: NSWindowDelegate  {
             } else {
                 return false
             }
+        }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.activate(menu: usbMenu)
+        }
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        if #available(macOS 27.0, *) {
+            usbPassthrough?.deactivate()
         }
     }
 }

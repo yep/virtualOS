@@ -10,6 +10,7 @@ import Cocoa
 import OSLog
 import Virtualization
 
+/// minimal implementation for x64 support
 class MainViewControllerBase: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var vmNameTextField: NSTextField!
@@ -281,13 +282,12 @@ final class MainViewController: MainViewControllerBase {
     
     @objc func restoreImageSelected(notification: Notification) {
         if let userInfo = notification.userInfo,
-           let restoreImageName = userInfo[Constants.selectedRestoreImageKey] as? String,
-           let supportsGuestProvisioning = userInfo[Constants.provisioningInfoKey] as? Bool,
-           restoreImageName != Constants.restoreImageNameLatest
+           let restoreImageName = userInfo[Constants.selectedRestoreImageKey] as? String
         {
-            if #available(macOS 27.0, *),
-               supportsGuestProvisioning
-            {
+            let supportsGuestProvisioning = userInfo[Constants.provisioningInfoKey] as? Bool
+            if restoreImageName == Constants.restoreImageNameLatest {
+                showSheet(restoreImageName: restoreImageName) // start download of latest restore image
+            } else if #available(macOS 27.0, *), supportsGuestProvisioning == true {
                 if let provisioningViewController = mainStoryBoard.instantiateController(withIdentifier: "ProvisioningViewController") as? ProvisioningViewController
                 {
                     provisioningViewController.restoreImageName = restoreImageName
@@ -330,11 +330,11 @@ final class MainViewController: MainViewControllerBase {
     }
     
     @objc func cpuCountChanged(sender: NSSlider) {
-        updateUIAndStoreParametersToDisk()
+        storeParametersToDiskAndUpdateLabels()
     }
     
     @objc func memorySliderChanged(sender: NSSlider) {
-        updateUIAndStoreParametersToDisk()
+        storeParametersToDiskAndUpdateLabels()
     }
     
     @IBAction func microphoneSwitchToggled(_ sender: NSSwitch) {
@@ -392,9 +392,9 @@ final class MainViewController: MainViewControllerBase {
                 viewModel.vmParameters = vmParameters
                 if vmParameters.installFinished == true {
                     viewModel.textFieldDelegate.vmBundle = vmBundle
-                    updateLabels(setZero: false)
                     updateCpuCount(vmParameters)
                     updateRam(vmParameters)
+                    updateLabels(setZero: false)
                     updateNetwork(vmParameters)
                     updateEnabledState(enabled: true, vmParameters: vmParameters)
                     autostartSwitch.state = UserDefaults.standard.autostartVMBundlePath == vmBundle.url.path ? .on : .off
@@ -515,9 +515,7 @@ final class MainViewController: MainViewControllerBase {
     fileprivate func updateLabels(setZero: Bool) {
         let cpuCount = Int(round(cpuCountSlider.doubleValue))
         let memorySizeInGB = Int(round(ramSlider.doubleValue))
-        viewModel.vmParameters?.cpuCount = cpuCount
-        viewModel.vmParameters?.memorySizeInGB = UInt64(memorySizeInGB)
-        
+
         if setZero {
             cpuCountLabel.stringValue = "CPU Count"
             ramLabel.stringValue = "RAM"
@@ -531,7 +529,9 @@ final class MainViewController: MainViewControllerBase {
         parameterOutlineView.reloadData()
     }
     
-    fileprivate func updateUIAndStoreParametersToDisk() {
+    fileprivate func storeParametersToDiskAndUpdateLabels() {
+        viewModel.vmParameters?.cpuCount = Int(round(cpuCountSlider.doubleValue))
+        viewModel.vmParameters?.memorySizeInGB = UInt64(round(ramSlider.doubleValue))
         viewModel.storeParametersToDisk()
         updateLabels(setZero: false)
     }

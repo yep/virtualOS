@@ -341,7 +341,15 @@
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Format" id="jxT-CU-nIS">
+                            <menuItem title="USB" id="uSb-De-vIc">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="USB" id="uSb-Me-nU0">
+                                    <items>
+                                        <menuItem title="Start VM for USB device discovery" id="uSb-Us-b02"/>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Format" hidden="YES" id="jxT-CU-nIS">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Format" id="GEO-Iw-cKr">
                                     <items>
@@ -890,7 +898,7 @@
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="117" id="HlI-kp-iqx"/>
                                 </constraints>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Teu-XY-Qhj">
-                                    <rect key="frame" x="1" y="113" width="384" height="17"/>
+                                    <rect key="frame" x="1" y="99" width="384" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="cyE-aw-R3w">

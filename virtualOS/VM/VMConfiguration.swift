@@ -11,13 +11,10 @@
 import Virtualization
 import AVFoundation // for microphone support
 import OSLog
-
-#if arch(arm64)
 import DiskImageKit
-#endif
 
 final class VMConfiguration: VZVirtualMachineConfiguration {
-    private var snapshotModel: AnyObject?
+    private var snapshotModel: AnyObject? // type erased because snapshots/DiskImageKit requires macOS 27
     
     func setup(parameters: VMParameters, macPlatformConfiguration: VZMacPlatformConfiguration, bundleURL: URL) throws {
         cpuCount        = parameters.cpuCount
