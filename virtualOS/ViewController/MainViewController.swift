@@ -19,6 +19,7 @@ class MainViewControllerBase: NSViewController {
     @IBOutlet weak var ramLabel: NSTextField!
     @IBOutlet weak var ramSlider: NSSlider!
     @IBOutlet weak var microphoneSwitch: NSSwitch!
+    @IBOutlet weak var autostartSwitch: NSSwitch!
     @IBOutlet weak var networkPopUpButton: NSPopUpButton!
     @IBOutlet weak var networkBridgePopUpButton: NSPopUpButton!
 }
@@ -29,6 +30,7 @@ final class MainViewController: MainViewControllerBase {
     fileprivate let mainStoryBoard = NSStoryboard(name: "Main", bundle: nil)
     fileprivate let viewModel = MainViewModel()
     fileprivate var activeVMBundleURLs = Set<URL>()
+    fileprivate var didAttemptAutostart = false
     fileprivate var windowController: WindowController? {
         return view.window?.windowController as? WindowController
     }
@@ -38,6 +40,7 @@ final class MainViewController: MainViewControllerBase {
         cpuCountSlider.isEnabled           = enabled
         vmNameTextField.isEnabled          = enabled
         microphoneSwitch.isEnabled         = enabled
+        autostartSwitch.isEnabled          = enabled
         networkPopUpButton.isEnabled       = enabled
         networkBridgePopUpButton.isEnabled = enabled
         if vmParameters?.microphoneEnabled ?? false {
@@ -95,6 +98,8 @@ final class MainViewController: MainViewControllerBase {
                 startVM()
             }
         }
+
+        startAutostartVMIfNeeded()
     }
     
     @IBAction func startButtonPressed(_ sender: NSButton) {
@@ -222,6 +227,12 @@ final class MainViewController: MainViewControllerBase {
         }
     }
 
+    @IBAction func autostartSwitchToggled(_ sender: NSSwitch) {
+        guard let bundleURL = viewModel.vmBundle?.url else { return }
+        UserDefaults.standard.autostartVMBundlePath = sender.state == .on ? bundleURL.path : nil
+        updateUI()
+    }
+
     @IBAction func deleteButtonPressed(_ sender: Any) {
         guard let vmBundle = viewModel.vmBundle else {
             return
@@ -232,6 +243,9 @@ final class MainViewController: MainViewControllerBase {
         if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
             selection == NSApplication.ModalResponse.OK
         {
+            if UserDefaults.standard.autostartVMBundlePath == vmBundle.url.path {
+                UserDefaults.standard.autostartVMBundlePath = nil
+            }
             viewModel.deleteVM(selection: selection, vmBundle: vmBundle)
             viewModel.vmBundle = nil
             viewModel.vmParameters = nil
@@ -383,6 +397,7 @@ final class MainViewController: MainViewControllerBase {
                     updateRam(vmParameters)
                     updateNetwork(vmParameters)
                     updateEnabledState(enabled: true, vmParameters: vmParameters)
+                    autostartSwitch.state = UserDefaults.standard.autostartVMBundlePath == vmBundle.url.path ? .on : .off
                     windowController?.updateButtons(hidden: false)
                     windowController?.startButton.isEnabled = !activeVMBundleURLs.contains(vmBundle.url)
                     if #available(macOS 27.0, *) {
@@ -403,6 +418,7 @@ final class MainViewController: MainViewControllerBase {
             viewModel.vmParameters = nil
             updateLabels(setZero: true)
             updateEnabledState(enabled: false)
+            autostartSwitch.state = .off
             windowController?.updateButtons(hidden: true)
         }
         
@@ -415,6 +431,7 @@ final class MainViewController: MainViewControllerBase {
         updateEnabledState(enabled: false)
         windowController?.updateButtons(hidden: false)
         windowController?.snapshotButton.isEnabled = false
+        autostartSwitch.state = .off
     }
     
     fileprivate func updateBridges() {
@@ -566,6 +583,27 @@ final class MainViewController: MainViewControllerBase {
         } else {
             Logger.shared.log(level: .default, "show vm window failed")
         }
+    }
+
+    fileprivate func startAutostartVMIfNeeded() {
+        guard !didAttemptAutostart else { return }
+        didAttemptAutostart = true
+        guard let autostartPath = UserDefaults.standard.autostartVMBundlePath else { return }
+
+        let rowCount = viewModel.tableViewDataSource.rows()
+        for row in 0..<rowCount {
+            guard let vmBundle = viewModel.tableViewDataSource.vmBundle(forRow: row) else { continue }
+            if vmBundle.url.path == autostartPath {
+                guard VMParameters.readFrom(url: vmBundle.url)?.installFinished == true else { return }
+                viewModel.selectedRow = row
+                updateUI()
+                Logger.shared.log(level: .default, "Autostarting VM \(vmBundle.name, privacy: .public)")
+                startVM()
+                return
+            }
+        }
+
+        UserDefaults.standard.autostartVMBundlePath = nil
     }
     
 }

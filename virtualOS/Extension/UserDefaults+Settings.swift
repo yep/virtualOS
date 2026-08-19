@@ -15,6 +15,7 @@ extension UserDefaults {
     fileprivate static let restoreImagesDirectoryKey             = "restoreImagesDirectoryKey"
     fileprivate static let restoreImagesDirectoryBookmarkDataKey = "restoreImagesDirectoryBookmarkData"
     fileprivate static let userRatingCounterKey                  = "userRatingCounterKey"
+    fileprivate static let autostartVMBundlePathKey              = "autostartVMBundlePath"
 
     var diskSize: Int {
         get {
@@ -92,6 +93,16 @@ extension UserDefaults {
         }
         set {
             set(newValue, forKey: Self.userRatingCounterKey)
+            synchronize()
+        }
+    }
+
+    var autostartVMBundlePath: String? {
+        get {
+            string(forKey: Self.autostartVMBundlePathKey)
+        }
+        set {
+            set(newValue, forKey: Self.autostartVMBundlePathKey)
             synchronize()
         }
     }

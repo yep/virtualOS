@@ -233,7 +233,7 @@ extension VMViewController: NSWindowDelegate  {
         if guestDidStop {
             return true
         } else {
-            let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM?", alertStyle: .warning)
+            let alert: NSAlert = NSAlert.okCancelAlert(messageText: "Stop VM", informativeText: "Are you sure you want to stop the VM? All unsaved changes will be lost.", alertStyle: .warning)
             let selection = alert.runModal()
             if selection == NSApplication.ModalResponse.alertFirstButtonReturn ||
                selection == NSApplication.ModalResponse.OK
