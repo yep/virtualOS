@@ -61,12 +61,13 @@ extension URL {
         if let bookmarkPath = UserDefaults.standard.vmFilesDirectory?.removingPercentEncoding,
            let bookmarkData = UserDefaults.standard.vmFilesDirectoryBookmarkData
         {
-            if Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkPath) == nil {
+            if let directoryURL = Bookmark.startAccess(bookmarkData: bookmarkData, for: bookmarkPath) {
+                return directoryURL
+            } else {
                 // previous vm file directory no longer exists, reset to default
                 UserDefaults.standard.vmFilesDirectory = URL.basePath
                 return URL.baseURL
             }
-            return URL.restoreImageURL
         }
         return URL.baseURL // default
     }
@@ -94,16 +95,16 @@ extension URL {
         return baseURL // default value
     }
 
+    /// Try to find a filename that does not exist
+    ///  - Returns: URL of the created filename
     static func createFilename(baseURL: URL, name: String, suffix: String) -> URL {
-        // try to find a filename that does not exist
-        let restoreImagesDirectoryURL = URL.startAccessingRestoreImagesDirectory()
-        var url = restoreImagesDirectoryURL.appendingPathComponent("\(name).\(suffix)")
+        var url = baseURL.appendingPathComponent("\(name).\(suffix)")
         var i = 1
         var exists = true
         
         while exists {
             if FileManager.default.fileExists(atPath: url.path) {
-                url = restoreImagesDirectoryURL.appendingPathComponent("\(name)_\(i).\(suffix)")
+                url = baseURL.appendingPathComponent("\(name)_\(i).\(suffix)")
                 i += 1
             } else {
                 exists = false
