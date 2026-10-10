@@ -36,6 +36,18 @@ extension URL {
     var diskImageURL: URL {
         return self.appending(path: "Disk.img")
     }
+    var snapshotBaseImageURL: URL {
+        return self.appending(path: "Disk.asif")
+    }
+    var snapshotDirectoryURL: URL {
+        return self.appending(path: "Snapshots", directoryHint: .isDirectory)
+    }
+    var snapshotActiveLayerURL: URL {
+        return snapshotDirectoryURL.appending(path: "active.asif")
+    }
+    var snapshotManifestURL: URL {
+        return self.appending(path: "Snapshots.json")
+    }
     var machineIdentifierURL: URL {
         return self.appending(path: "MachineIdentifier")
     }
@@ -101,4 +113,3 @@ extension URL {
     }
 
 }
-

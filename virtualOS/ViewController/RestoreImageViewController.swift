@@ -12,6 +12,7 @@ import OSLog
 final class RestoreImageViewController: NSViewController {
     let fileModel = FileModel()
     fileprivate var selectedRestoreImage = ""
+    fileprivate var selectedRestoreImageVersion: OperatingSystemVersion?
 
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var installButton: NSButton!
@@ -36,6 +37,8 @@ final class RestoreImageViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         
+        view.window?.defaultButtonCell = installButton.cell as? NSButtonCell
+
         updateUI()
         
         if tableView.numberOfRows > 0 {
@@ -49,7 +52,16 @@ final class RestoreImageViewController: NSViewController {
     
     @IBAction func installButtonPressed(_ sender: NSButton) {
         if tableView.selectedRow != -1 {
-            let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImage: self.selectedRestoreImage])
+            var supportsGuestProvisioning = false
+            if let restoreImageVersion = selectedRestoreImageVersion,
+               restoreImageVersion.majorVersion >= 27
+            {
+                supportsGuestProvisioning = true
+            }
+            
+            var userInfo: [String: Any] = [Constants.selectedRestoreImageKey: self.selectedRestoreImage]
+            userInfo[Constants.provisioningInfoKey] = supportsGuestProvisioning
+            let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: userInfo)
             NotificationCenter.default.post(notification)
             view.window?.close()
         }
@@ -63,7 +75,7 @@ final class RestoreImageViewController: NSViewController {
     }
     
     @IBAction func downloadLatestButtonPressed(_ sender: NSButton) {
-        let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImage: Constants.restoreImageNameLatest])
+        let notification = Notification(name: Constants.restoreImageNameSelectedNotification, userInfo: [Constants.selectedRestoreImageKey: Constants.restoreImageNameLatest])
         NotificationCenter.default.post(notification)
         view.window?.close()
     }
@@ -89,6 +101,7 @@ final class RestoreImageViewController: NSViewController {
                     switch result {
                     case .success(let restoreImage):
                         info = restoreImage.operatingSystemVersionString
+                        self?.selectedRestoreImageVersion = restoreImage.operatingSystemVersion
                         self?.setButtons(enabled: true)
                     case .failure(let error):
                         info = "Invalid image"
