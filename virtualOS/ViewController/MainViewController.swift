@@ -284,10 +284,12 @@ final class MainViewController: MainViewControllerBase {
         if let userInfo = notification.userInfo,
            let restoreImageName = userInfo[Constants.selectedRestoreImageKey] as? String
         {
-            let supportsGuestProvisioning = userInfo[Constants.provisioningInfoKey] as? Bool
             if restoreImageName == Constants.restoreImageNameLatest {
                 showSheet(restoreImageName: restoreImageName) // start download of latest restore image
-            } else if #available(macOS 27.0, *), supportsGuestProvisioning == true {
+            } else if #available(macOS 27.0, *),
+                   let supportsGuestProvisioning = userInfo[Constants.provisioningInfoKey] as? Bool,
+                   supportsGuestProvisioning == true
+            {
                 if let provisioningViewController = mainStoryBoard.instantiateController(withIdentifier: "ProvisioningViewController") as? ProvisioningViewController
                 {
                     provisioningViewController.restoreImageName = restoreImageName
@@ -436,19 +438,23 @@ final class MainViewController: MainViewControllerBase {
     
     fileprivate func updateBridges() {
         networkBridgePopUpButton.removeAllItems()
-        var i = 0
         let selectedBridge = viewModel.vmParameters?.networkBridge
-        for interface in VZBridgedNetworkInterface.networkInterfaces {
-            networkBridgePopUpButton.insertItem(withTitle: interface.description, at: i)
-            i += 1
-            if selectedBridge == interface.description {
-                networkBridgePopUpButton.selectItem(at: i)
-                viewModel.vmParameters?.networkBridge = interface.description
-            }
+        let interfaces = VZBridgedNetworkInterface.networkInterfaces
+
+        for interface in interfaces {
+            networkBridgePopUpButton.addItem(withTitle: interface.description)
         }
-        
-        if networkBridgePopUpButton.selectedItem == nil {
+
+        if let selectedBridge,
+           let selectedIndex = interfaces.firstIndex(where: { $0.description == selectedBridge })
+        {
+            networkBridgePopUpButton.selectItem(at: selectedIndex)
+        } else if let firstInterface = interfaces.first {
             networkBridgePopUpButton.selectItem(at: 0)
+            if selectedBridge != firstInterface.description {
+                viewModel.vmParameters?.networkBridge = firstInterface.description
+                viewModel.storeParametersToDisk()
+            }
         }
     }
     
